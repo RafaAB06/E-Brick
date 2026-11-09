@@ -1,8 +1,7 @@
 # Sistema de Gerenciamento Hoteleiro — Hotel Paraiso
 
-> Trabalho Final — | Engenharia de Softwre I | Banco de Dados II | Programação II |
-> | Ciencia da Computação | UNOESC Sao Miguel do Oeste — 2026/02 | 
-> Professores: | Franciele Petry | Otilia Donato Barbosa | Roberson Junior Fernandes Alves |
+> Trabalho Final: Engenharia de Softwre I | Banco de Dados II | Programação II
+> Professores: Franciele Petry | Otilia Donato Barbosa | Roberson Junior Fernandes Alves
 
 ---
 
