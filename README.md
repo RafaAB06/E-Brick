@@ -9,7 +9,7 @@
 
 ## Resumo
 
-O &Brick é um sistema fictício de gerenciamento desenvolvido para uma loja de materiais de construção, com o objetivo de centralizar e otimizar processos administrativos e comerciais. O projeto contempla o controle de compras, estoque, vendas e distribuição de produtos, permitindo acompanhar a movimentação de mercadorias desde a aquisição até a entrega ao cliente.
+O &Brick é um sistema fictício de gerenciamento desenvolvido para uma loja de materiais de construção, com o objetivo de centralizar e otimizar processos administrativos e comerciais. O projeto busca ajudar no controle de compras, estoque e vendas, permitindo acompanhar tudo, desde a aquisição até a venda ao cliente.
 
 O sistema busca proporcionar maior organização, reduzir inconsistências nas informações e facilitar o gerenciamento das operações, oferecendo uma estrutura integrada para melhorar a eficiência e apoiar a tomada de decisões do estabelecimento.
 
