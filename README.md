@@ -1,10 +1,9 @@
-# Gerenciador de depósito e loja de materiais de construção  — &Brick
+# &Brick — Gerenciador de depósito e loja de materiais de construção 
 
-> Trabalho Final: Engenharia de Softwre I | Banco de Dados II | Programação II
-> 
-> Professores: Franciele Petry | Otilia Donato Barbosa | Roberson Junior Fernandes Alves
->
-> Ciencia da Computação | UNOESC Sao Miguel do Oeste — 2026/02
+> Trabalho Final A1 — Ciencia da Computação | UNOESC Sao Miguel do Oeste — 2026/02 <br/>
+> <br/>
+> Disciplinas: Engenharia de Softwre I | Banco de Dados II | Programação II <br/>
+> Professores: Franciele Petry | Otilia Donato Barbosa | Roberson Junior Fernandes Alves <br/>
 
 ---
 
