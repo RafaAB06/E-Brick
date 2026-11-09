@@ -19,7 +19,7 @@ O sistema busca proporcionar maior organização, reduzir inconsistências nas i
 
 | ID | Descricao |
 |----|-----------|
-| RF01 | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
+| RF01 | O sistema deve permitir o cadastro, a edição, a consulta e a exclusão de produtos, contendo informações como nome, descrição, código, categoria, unidade de medida e preço.|
 | RF02 | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
 | RF03 | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
 | RF04 | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
