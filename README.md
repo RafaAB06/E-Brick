@@ -47,9 +47,10 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 | Tecnologia | Finalidade |
 |------------|------------|
+| Java 21 | Backend |
+| HTML5, CSS3 e JavaScript | Fronted |
 | PostgreSQL 16 | Sistema Gerenciador de Banco de Dados (SGBD) |
 | SQL (DDL / DML) | Criacao do esquema, constraints, indices e consultas |
-
 | Git / GitHub | Versionamento e entrega do projeto |
 
 ---
