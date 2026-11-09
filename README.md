@@ -20,10 +20,10 @@ O sistema busca proporcionar maior organização, reduzir inconsistências nas i
 | ID | Descricao |
 |----|-----------|
 | RF01 | O sistema deve permitir o cadastro, a edição, a consulta e a exclusão de produtos, contendo informações como nome, descrição, código, categoria, unidade de medida e preço.|
-| RF02 | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
-| RF03 | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
-| RF04 | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
-| RF05 | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
+| RF02 | O sistema deve permitir o cadastro e o gerenciamento de fornecedores, armazenando informações como nome, CNPJ, endereço, telefone e e-mail.|
+| RF03 | O sistema deve permitir o cadastro e o gerenciamento de clientes, armazenando dados pessoais ou empresariais e informações de contato.|
+| RF04 | O sistema deve permitir o cadastro de funcionários e usuários, vinculando-os às suas respectivas funções e permissões de acesso.|
+| RF05 | O sistema deve controlar automaticamente a quantidade de produtos em estoque, atualizando os registros conforme as entradas e saídas realizadas.|
 ...
 
 ## Requisitos Nao Funcionais
