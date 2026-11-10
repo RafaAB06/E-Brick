@@ -36,11 +36,17 @@ O sistema busca proporcionar maior organização, reduzir inconsistências nas i
 
 | ID | Descricao |
 |----|-----------|
-| RNF01 | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
-| RNF02 | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
-| RNF03 | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
-| RNF04 | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
-| RNF05 | xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
+| RNF01 | O sistema deve apresentar uma interface intuitiva e de fácil utilização, permitindo que usuários com diferentes níveis de conhecimento em informática consigam utilizar suas funcionalidades.|
+| RNF02 | O sistema deve possuir autenticação por usuário e senha para controlar o acesso às funcionalidades.|
+| RNF03 | O sistema deve utilizar mecanismos de proteção para impedir que usuários não autorizados acessem informações restritas.|
+| RNF04 | O sistema deve permitir sua utilização em computadores com diferentes resoluções de tela, mantendo a organização e a legibilidade da interface.|
+| RNF05 | O sistema deve realizar backups de segurança periódicos do banco de dados, permitindo a recuperação das informações em caso de falhas.|
+| RNF06 | O sistema deve apresentar tempo de resposta de até 3 segundos para operações comuns, considerando condições normais de utilização.|
+| RNF07 | O sistema deve manter a integridade dos dados, evitando registros duplicados, inconsistências e alterações indevidas nas informações.|
+| RNF08 | O sistema deve garantir que as operações de venda e movimentação de estoque sejam registradas de maneira consistente.|
+| RNF09 | O sistema deve ser compatível com os principais navegadores modernos, caso seja disponibilizado por meio de uma aplicação web.|
+| RNF10 | O sistema deve possuir uma estrutura organizada e modular, facilitando futuras manutenções e atualizações.|
+
 ...
 
 ---
