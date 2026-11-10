@@ -30,7 +30,6 @@ O sistema busca proporcionar maior organização, reduzir inconsistências nas i
 | RF09 | O sistema deve permitir o registro e o gerenciamento de pedidos de compra realizados junto aos fornecedores.|
 | RF10 | O sistema deve permitir a consulta ao histórico de compras realizadas, identificando fornecedores, produtos, quantidades, valores e datas.|
 
-...
 
 ## Requisitos Nao Funcionais
 
@@ -46,8 +45,6 @@ O sistema busca proporcionar maior organização, reduzir inconsistências nas i
 | RNF08 | O sistema deve garantir que as operações de venda e movimentação de estoque sejam registradas de maneira consistente.|
 | RNF09 | O sistema deve ser compatível com os principais navegadores modernos, caso seja disponibilizado por meio de uma aplicação web.|
 | RNF10 | O sistema deve possuir uma estrutura organizada e modular, facilitando futuras manutenções e atualizações.|
-
-...
 
 ---
 
