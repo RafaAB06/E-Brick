@@ -24,6 +24,12 @@ O sistema busca proporcionar maior organização, reduzir inconsistências nas i
 | RF03 | O sistema deve permitir o cadastro e o gerenciamento de clientes, armazenando dados pessoais ou empresariais e informações de contato.|
 | RF04 | O sistema deve permitir o cadastro de funcionários e usuários, vinculando-os às suas respectivas funções e permissões de acesso.|
 | RF05 | O sistema deve controlar automaticamente a quantidade de produtos em estoque, atualizando os registros conforme as entradas e saídas realizadas.|
+| RF06 | O sistema deve permitir o registro de entradas de mercadorias provenientes de compras e outras movimentações de estoque.|
+| RF07 | O sistema deve permitir o registro de saídas de mercadorias, incluindo vendas, perdas, avarias e outras movimentações.|
+| RF08 | O sistema deve emitir alertas quando a quantidade de determinado produto atingir ou ficar abaixo do estoque mínimo estabelecido.|
+| RF09 | O sistema deve permitir o registro e o gerenciamento de pedidos de compra realizados junto aos fornecedores.|
+| RF10 | O sistema deve permitir a consulta ao histórico de compras realizadas, identificando fornecedores, produtos, quantidades, valores e datas.|
+
 ...
 
 ## Requisitos Nao Funcionais
