@@ -90,7 +90,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
       Matricula: 449472
     </td>
     <td align="center">
-      <img width="150" height="150" alt="Image" src=""><br/>
+      <img width="150" height="150" alt="Screenshot_2" src="https://github.com/user-attachments/assets/e42998d1-a40e-472c-8617-98fa9f35791a"><br/>
       <strong>Eduardo Ari Rebonatto Muller</strong><br/>
       Matricula: xxxxxx
     </td>
