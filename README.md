@@ -65,31 +65,39 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ## Estrutura do repositorio
 
-```
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-```
+---
 
 ## Como executar
 
-## Desenvolvedores
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+---
+
+## Devs
 
 <table>
   <tr>
     <td align="center">
-      <img src="https://api.dicebear.com/9.x/avataaars/png?seed=Fulano&size=100" width="100"><br/>
-      <strong>Fulano de Tal</strong><br/>
-      Matricula: 2024001
+      <img width="150" height="150" alt="Image" src="https://github.com/user-attachments/assets/2086a702-533b-42a1-a3c3-7efef403f3a6"><br/>    
+      <strong>Arthur Rosanelli</strong><br/>
+      Matricula: 449641
     </td>
     <td align="center">
-      <img src="https://api.dicebear.com/9.x/avataaars/png?seed=Beltrano&size=100" width="100"><br/>
-      <strong>Beltrano da Silva</strong><br/>
-      Matricula: 2024002
+      <img width="115" height="150" alt="Image" src="https://github.com/user-attachments/assets/5ec5ab7f-62c0-4772-9302-7bd2e125d404"><br/>
+      <strong>Daniel Christani</strong><br/>
+      Matricula: 449472
     </td>
     <td align="center">
-      <img src="https://api.dicebear.com/9.x/avataaars/png?seed=Fulana&size=100" width="100"><br/>
-      <strong>Fulana de Tal</strong><br/>
-      Matricula: 2024003
+      <img width="150" height="150" alt="Image" src=""><br/>
+      <strong>Eduardo Ari Rebonatto Muller</strong><br/>
+      Matricula: xxxxxx
+    </td>
+    <td align="center">
+      <img width="150" height="150" alt="Image" src=""><br/>      
+      <strong>Rafael Brustolin</strong><br/>
+      Matricula: 431507
     </td>
   </tr>
 </table>
