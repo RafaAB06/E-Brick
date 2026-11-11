@@ -85,17 +85,17 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
       Matricula: 449641
     </td>
     <td align="center">
-      <img width="115" height="150" alt="Image" src="https://github.com/user-attachments/assets/5ec5ab7f-62c0-4772-9302-7bd2e125d404"><br/>
+      <img width="150" height="150" alt="image" src="https://github.com/user-attachments/assets/fcd45e00-321e-4e50-a443-3dc22c970629"><br/>
       <strong>Daniel Christani</strong><br/>
       Matricula: 449472
     </td>
     <td align="center">
       <img width="150" height="150" alt="Screenshot_2" src="https://github.com/user-attachments/assets/e42998d1-a40e-472c-8617-98fa9f35791a"><br/>
       <strong>Eduardo Ari Rebonatto Muller</strong><br/>
-      Matricula: xxxxxx
+      Matricula: 447913
     </td>
     <td align="center">
-      <img width="150" height="150" alt="Image" src=""><br/>      
+      <img width="150" height="150" alt="image" src="https://github.com/user-attachments/assets/897ab409-2def-4d9c-9c35-c0d8281d95b1"><br/>      
       <strong>Rafael Brustolin</strong><br/>
       Matricula: 431507
     </td>
