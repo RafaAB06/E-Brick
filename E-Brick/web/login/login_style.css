@@ -1,0 +1,16 @@
+.barra_topo {
+    width: 100%;
+    height: 25vh;
+    background-color: #ff0000;
+
+    align-items: center;
+}
+
+.titulo{
+    margin-left: 2vh;
+    font-size: clamp(1.5rem, 12vw, 20vh);
+}
+
+.titulo_centralizado{
+    text-align: center;
+}

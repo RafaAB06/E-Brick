@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-br">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>&amp;Brick Login</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+	<link href="/login_style.css" rel="stylesheet">
+</head>
+
+<body>
+	<div class="barra_topo">
+		<h1 class="titulo">&-BRICK</h1>
+	</div>
+
+	<div class="position-absolute top-50 start-50 translate-middle card p-4 shadow"
+		class="h-100 d-flex flex-column justify-content-center">
+		<div>
+			<h2 class = "titulo_centralizado">Login</h2>
+			<hr>
+			<div class="mb-3">
+				<label class="form-label">Usuário</label>
+				<input class="form-control" id="usuario_input">
+			</div>
+
+			<div class="mb-3">
+				<label class="form-label">Senha</label>
+				<div class="input-group mb-3">
+					<input type="password" class="form-control me-2" placeholder="Senha" id="senha_input">
+					<button class="btn btn-outline-secondary" type="button" id="mostrar_senha">Mostrar</button>
+				</div>
+			</div>
+
+			<button id="submit" class="btn btn-primary w-100">Acessar</button>
+			<small id="login_erro" class="text-danger"></small>
+		</form>
+	</div>
+</body>
+
+<script type="module" src="/lib.js"></script>
+<script type="module" src="/login_script.js"></script><!--quem foi o animal que fez comentarios assim?????????-->
+<script src="/senha_script.js"></script>
+
+</html>

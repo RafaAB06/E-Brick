@@ -1,0 +1,4 @@
+INDEX VERSION 1.131+C:\Users\rafop\Área de Trabalho\E-Brick\.metadata\.plugins\org.eclipse.jdt.core
+4195968755.index
+1077165961.index
+1865797976.index

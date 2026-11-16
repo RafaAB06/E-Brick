@@ -1,0 +1,36 @@
+body {
+    background-color: #f4f6f9;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    min-height: 100vh;
+    background: #212529;
+}
+
+.sidebar a {
+    display: block;
+    padding: 12px 18px;
+    color: #adb5bd;
+    text-decoration: none;
+    border-radius: 6px;
+    margin-bottom: 4px;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+    background: #343a40;
+    color: white;
+}
+
+.content {
+    flex: 1;
+    min-width: 0;
+}
+
+.stat-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
