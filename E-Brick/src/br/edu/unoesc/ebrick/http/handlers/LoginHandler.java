@@ -16,21 +16,16 @@ import br.edu.unoesc.ebrick.http.HttpUtils;
 import br.edu.unoesc.ebrick.http.Resposta;
 import br.edu.unoesc.ebrick.http.Server;
 
-public class LoginHandler implements HttpHandler {	
-	
-	public LoginHandler() {
-		Server.addListener("/login_style.css", new FileHandler("web/login/login_style.css", HttpUtils.TEXT_CSS));
-		Server.addListener("/login_script.js", new FileHandler("web/login/login_script.js", HttpUtils.TEXT_JAVASCRIPT));
-		Server.addListener("/senha_script.js", new FileHandler("web/login/senha_script.js", HttpUtils.TEXT_JAVASCRIPT));
+public class LoginHandler extends HandlerBasico {	
+	public LoginHandler(String requestURI) {
+		super(requestURI);
 	}
-	
+
 	@Override
-	public void handle(HttpExchange exchange) throws IOException {		
-		if(HttpUtils.IsGet(exchange)) {
-			HttpUtils.send(exchange, HttpURLConnection.HTTP_OK, "web/login/index.html", HttpUtils.TEXT_HTML);
-		}else if(HttpUtils.IsPost(exchange)) {
+	public void handle(HttpExchange exchange) throws IOException {	
+		if(HttpUtils.IsPost(exchange)) {
 			processarLogin(exchange);
-		}
+		}else super.handle(exchange);
 	}
 
 	private void processarLogin(HttpExchange exchange) throws IOException {
@@ -40,7 +35,7 @@ public class LoginHandler implements HttpHandler {
 			String json = HttpUtils.getBody(exchange);//odeio try catch, muito feio
 			JSONObject jsonObject = new JSONObject(json);
 			String login = jsonObject.getString("login");
-			
+						
 			Usuario user = Usuarios.getInstancia().getUsuarioPeloLogin(login);
 			if(user == null) {
 				resposta = new Resposta(HttpURLConnection.HTTP_NOT_FOUND, "Usuário não encontrado");

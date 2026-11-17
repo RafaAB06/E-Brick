@@ -1,0 +1,27 @@
+package br.edu.unoesc.ebrick.auth;
+
+import com.sun.net.httpserver.HttpExchange;
+
+import br.edu.unoesc.ebrick.auth.entities.Permissao;
+import br.edu.unoesc.ebrick.auth.entities.Usuario;
+import br.edu.unoesc.ebrick.http.Cookies;
+
+public final class AuthUtils {
+	private AuthUtils() {}
+	
+	public static boolean autenticado(HttpExchange exchange) {
+		String token = Cookies.getCookieSessao(exchange);
+		return Sessoes.getInstancia().sessaoValida(token);
+	}
+	
+	public static boolean autorizado(HttpExchange exchange, Permissao permissao) {
+		if(autenticado(exchange)) {
+			String token = Cookies.getCookieSessao(exchange);
+			Usuario user = Sessoes.getInstancia().getUsuarioPorToken(token);
+			
+			return user.temPermissao(permissao);
+		}
+		
+		return false;
+	}
+}

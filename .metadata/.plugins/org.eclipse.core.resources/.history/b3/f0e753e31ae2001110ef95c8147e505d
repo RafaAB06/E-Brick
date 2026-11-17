@@ -1,0 +1,5 @@
+package br.edu.unoesc.ebrick.auth;
+
+public class AuthUtils {
+
+}

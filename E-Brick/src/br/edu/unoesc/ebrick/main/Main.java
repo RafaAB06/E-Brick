@@ -7,6 +7,7 @@ import br.edu.unoesc.ebrick.auth.Usuarios;
 import br.edu.unoesc.ebrick.http.HttpUtils;
 import br.edu.unoesc.ebrick.http.Server;
 import br.edu.unoesc.ebrick.http.handlers.FileHandler;
+import br.edu.unoesc.ebrick.http.handlers.HandlerBasico;
 import br.edu.unoesc.ebrick.http.handlers.HandlerPadrao;
 import br.edu.unoesc.ebrick.http.handlers.LoginHandler;
 import br.edu.unoesc.ebrick.http.handlers.SistemaHandler;
@@ -54,9 +55,9 @@ public class Main {
 		boolean sucess = true;
 		try {
 			Server.start(8080);
-			Server.addListener("/", new HandlerPadrao());
-			Server.addListener("/login", new LoginHandler());	
-			Server.addListener("/sistema", new SistemaHandler());	
+			//Server.addListener("/", new HandlerPadrao());
+			Server.addListener(new LoginHandler("/login"));	
+			Server.addListener(new HandlerBasico("/sistema"));	
 			//Server.addListener("/cadastro_cliente", new CadastroHandler());
 			
 			Server.addListener("/lib.js", new FileHandler("web/lib.js", HttpUtils.TEXT_JAVASCRIPT));

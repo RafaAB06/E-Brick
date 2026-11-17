@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+    <fullyQualifiedTypeName name="br.edu.unoesc.ebrick.http.handlers.HandlerAutenticado"/>
+    <fullyQualifiedTypeName name="java.net.http.HttpResponse"/>
+    <fullyQualifiedTypeName name="br.edu.unoesc.ebrick.http.handlers.HandlerPagina"/>
+    <fullyQualifiedTypeName name="java.lang.Override"/>
+    <fullyQualifiedTypeName name="com.sun.net.httpserver.HttpExchange"/>
+    <fullyQualifiedTypeName name="br.edu.unoesc.ebrick.auth.Permissoes"/>
+    <fullyQualifiedTypeName name="com.sun.net.httpserver.HttpHandler"/>
+    <fullyQualifiedTypeName name="br.edu.unoesc.ebrick.auth.entities.Usuario"/>
+    <fullyQualifiedTypeName name="br.edu.unoesc.ebrick.auth.AuthUtils"/>
+    <fullyQualifiedTypeName name="br.edu.unoesc.ebrick.http.handlers.HandlerBasico"/>
+    <fullyQualifiedTypeName name="java.nio.file.Files"/>
+    <fullyQualifiedTypeName name="org.json.HTTP"/>
+    <fullyQualifiedTypeName name="br.edu.unoesc.ebrick.http.HttpUtils"/>
+    <fullyQualifiedTypeName name="java.io.File"/>
+    <fullyQualifiedTypeName name="java.nio.file.Path"/>
+    <fullyQualifiedTypeName name="java.net.HttpURLConnection"/>
+    <fullyQualifiedTypeName name="br.edu.unoesc.ebrick.utils.FileUtils"/>
+    <fullyQualifiedTypeName name="java.io.IOException"/>
+</qualifiedTypeNameHistroy>
