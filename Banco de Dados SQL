@@ -1,0 +1,1651 @@
+-- ============================================================
+-- EBRICK - SISTEMA DE GERENCIAMENTO DE LOJA DE MATERIAIS
+-- ============================================================
+
+-- ============================================================
+-- 1. EXTENSÃO PARA CRIPTOGRAFIA DAS SENHAS
+-- ============================================================
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+
+-- ============================================================
+-- 2. TABELA: CATEGORIA
+-- ============================================================
+
+CREATE TABLE categoria (
+    id_categoria BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL UNIQUE,
+    descricao VARCHAR(255)
+);
+
+
+-- ============================================================
+-- 3. TABELA: UNIDADE DE MEDIDA
+-- ============================================================
+
+CREATE TABLE unidade_medida (
+    id_unidade BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    sigla VARCHAR(10) NOT NULL UNIQUE,
+    descricao VARCHAR(50) NOT NULL
+);
+
+
+-- ============================================================
+-- 4. TABELA: PRODUTO
+-- ============================================================
+
+CREATE TABLE produto (
+    id_produto BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    codigo VARCHAR(30) NOT NULL UNIQUE,
+    nome VARCHAR(150) NOT NULL,
+    descricao TEXT,
+
+    id_categoria BIGINT NOT NULL,
+    id_unidade BIGINT NOT NULL,
+
+    preco_venda NUMERIC(12,2) NOT NULL
+        CHECK (preco_venda >= 0),
+
+    estoque_minimo NUMERIC(12,3) NOT NULL DEFAULT 0
+        CHECK (estoque_minimo >= 0),
+
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+
+    CONSTRAINT fk_produto_categoria
+        FOREIGN KEY (id_categoria)
+        REFERENCES categoria(id_categoria),
+
+    CONSTRAINT fk_produto_unidade
+        FOREIGN KEY (id_unidade)
+        REFERENCES unidade_medida(id_unidade)
+);
+
+
+-- ============================================================
+-- 5. TABELA: FORNECEDOR
+-- ============================================================
+
+CREATE TABLE fornecedor (
+    id_fornecedor BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    razao_social VARCHAR(150) NOT NULL,
+    nome_fantasia VARCHAR(150),
+
+    cnpj VARCHAR(18) UNIQUE,
+
+    telefone VARCHAR(20),
+    email VARCHAR(150),
+
+    endereco VARCHAR(200),
+    cidade VARCHAR(100),
+    estado CHAR(2),
+
+    ativo BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+
+-- ============================================================
+-- 6. TABELA: CLIENTE
+-- ============================================================
+
+CREATE TABLE cliente (
+    id_cliente BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    tipo_pessoa VARCHAR(2) NOT NULL
+        CHECK (tipo_pessoa IN ('PF', 'PJ')),
+
+    nome VARCHAR(150) NOT NULL,
+
+    cpf_cnpj VARCHAR(18) UNIQUE,
+
+    telefone VARCHAR(20),
+    email VARCHAR(150),
+
+    endereco VARCHAR(200),
+    cidade VARCHAR(100),
+    estado CHAR(2),
+
+    ativo BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+
+-- ============================================================
+-- 7. TABELA: FUNCIONARIO
+-- ============================================================
+
+CREATE TABLE funcionario (
+    id_funcionario BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    nome VARCHAR(150) NOT NULL,
+    cpf VARCHAR(14) UNIQUE,
+
+    telefone VARCHAR(20),
+    email VARCHAR(150),
+
+    cargo VARCHAR(100),
+    data_admissao DATE,
+
+    ativo BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+
+-- ============================================================
+-- 8. TABELA: PERFIL
+-- ============================================================
+
+CREATE TABLE perfil (
+    id_perfil BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    nome VARCHAR(50) NOT NULL UNIQUE,
+    descricao VARCHAR(255)
+);
+
+
+-- ============================================================
+-- 9. TABELA: PERMISSAO
+-- ============================================================
+
+CREATE TABLE permissao (
+    id_permissao BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    nome VARCHAR(100) NOT NULL UNIQUE,
+    descricao VARCHAR(255)
+);
+
+
+-- ============================================================
+-- 10. TABELA: USUARIO
+-- ============================================================
+
+CREATE TABLE usuario (
+    id_usuario BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    id_funcionario BIGINT NOT NULL UNIQUE,
+
+    login VARCHAR(50) NOT NULL UNIQUE,
+
+    senha_hash VARCHAR(255) NOT NULL,
+
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+
+    ultimo_login TIMESTAMP,
+
+    CONSTRAINT fk_usuario_funcionario
+        FOREIGN KEY (id_funcionario)
+        REFERENCES funcionario(id_funcionario)
+);
+
+
+-- ============================================================
+-- 11. TABELA: USUARIO_PERFIL
+-- ============================================================
+
+CREATE TABLE usuario_perfil (
+    id_usuario BIGINT NOT NULL,
+    id_perfil BIGINT NOT NULL,
+
+    PRIMARY KEY (id_usuario, id_perfil),
+
+    CONSTRAINT fk_usuario_perfil_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES usuario(id_usuario),
+
+    CONSTRAINT fk_usuario_perfil_perfil
+        FOREIGN KEY (id_perfil)
+        REFERENCES perfil(id_perfil)
+);
+
+
+-- ============================================================
+-- 12. TABELA: PERFIL_PERMISSAO
+-- ============================================================
+
+CREATE TABLE perfil_permissao (
+    id_perfil BIGINT NOT NULL,
+    id_permissao BIGINT NOT NULL,
+
+    PRIMARY KEY (id_perfil, id_permissao),
+
+    CONSTRAINT fk_perfil_permissao_perfil
+        FOREIGN KEY (id_perfil)
+        REFERENCES perfil(id_perfil),
+
+    CONSTRAINT fk_perfil_permissao_permissao
+        FOREIGN KEY (id_permissao)
+        REFERENCES permissao(id_permissao)
+);
+
+
+-- ============================================================
+-- 13. TABELA: COMPRA
+-- ============================================================
+
+CREATE TABLE compra (
+    id_compra BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    id_fornecedor BIGINT NOT NULL,
+    id_usuario BIGINT NOT NULL,
+
+    data_compra TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    status VARCHAR(20) NOT NULL DEFAULT 'ABERTA'
+        CHECK (
+            status IN (
+                'ABERTA',
+                'RECEBIDA',
+                'CANCELADA'
+            )
+        ),
+
+    observacao TEXT,
+
+    CONSTRAINT fk_compra_fornecedor
+        FOREIGN KEY (id_fornecedor)
+        REFERENCES fornecedor(id_fornecedor),
+
+    CONSTRAINT fk_compra_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES usuario(id_usuario)
+);
+
+
+-- ============================================================
+-- 14. TABELA: ITEM_COMPRA
+-- ============================================================
+
+CREATE TABLE item_compra (
+    id_item_compra BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    id_compra BIGINT NOT NULL,
+    id_produto BIGINT NOT NULL,
+
+    quantidade NUMERIC(12,3) NOT NULL
+        CHECK (quantidade > 0),
+
+    valor_unitario NUMERIC(12,2) NOT NULL
+        CHECK (valor_unitario >= 0),
+
+    desconto NUMERIC(12,2) NOT NULL DEFAULT 0
+        CHECK (desconto >= 0),
+
+    CONSTRAINT ck_item_compra_desconto
+        CHECK (
+            desconto <= quantidade * valor_unitario
+        ),
+
+    CONSTRAINT uk_item_compra_produto
+        UNIQUE (id_compra, id_produto),
+
+    CONSTRAINT fk_item_compra_compra
+        FOREIGN KEY (id_compra)
+        REFERENCES compra(id_compra),
+
+    CONSTRAINT fk_item_compra_produto
+        FOREIGN KEY (id_produto)
+        REFERENCES produto(id_produto)
+);
+
+
+-- ============================================================
+-- 15. TABELA: VENDA
+-- ============================================================
+
+CREATE TABLE venda (
+    id_venda BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    id_cliente BIGINT,
+    id_usuario BIGINT NOT NULL,
+
+    data_venda TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    status VARCHAR(20) NOT NULL DEFAULT 'ABERTA'
+        CHECK (
+            status IN (
+                'ABERTA',
+                'FINALIZADA',
+                'CANCELADA'
+            )
+        ),
+
+    desconto NUMERIC(12,2) NOT NULL DEFAULT 0
+        CHECK (desconto >= 0),
+
+    CONSTRAINT fk_venda_cliente
+        FOREIGN KEY (id_cliente)
+        REFERENCES cliente(id_cliente),
+
+    CONSTRAINT fk_venda_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES usuario(id_usuario)
+);
+
+
+-- ============================================================
+-- 16. TABELA: ITEM_VENDA
+-- ============================================================
+
+CREATE TABLE item_venda (
+    id_item_venda BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    id_venda BIGINT NOT NULL,
+    id_produto BIGINT NOT NULL,
+
+    quantidade NUMERIC(12,3) NOT NULL
+        CHECK (quantidade > 0),
+
+    valor_unitario NUMERIC(12,2) NOT NULL
+        CHECK (valor_unitario >= 0),
+
+    desconto NUMERIC(12,2) NOT NULL DEFAULT 0
+        CHECK (desconto >= 0),
+
+    CONSTRAINT ck_item_venda_desconto
+        CHECK (
+            desconto <= quantidade * valor_unitario
+        ),
+
+    CONSTRAINT uk_item_venda_produto
+        UNIQUE (id_venda, id_produto),
+
+    CONSTRAINT fk_item_venda_venda
+        FOREIGN KEY (id_venda)
+        REFERENCES venda(id_venda),
+
+    CONSTRAINT fk_item_venda_produto
+        FOREIGN KEY (id_produto)
+        REFERENCES produto(id_produto)
+);
+
+
+-- ============================================================
+-- 17. TABELA: PAGAMENTO
+-- ============================================================
+
+CREATE TABLE pagamento (
+    id_pagamento BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    id_venda BIGINT NOT NULL,
+
+    forma_pagamento VARCHAR(30) NOT NULL
+        CHECK (
+            forma_pagamento IN (
+                'DINHEIRO',
+                'PIX',
+                'CARTAO_CREDITO',
+                'CARTAO_DEBITO',
+                'BOLETO'
+            )
+        ),
+
+    valor NUMERIC(12,2) NOT NULL
+        CHECK (valor > 0),
+
+    data_pagamento TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_pagamento_venda
+        FOREIGN KEY (id_venda)
+        REFERENCES venda(id_venda)
+);
+
+
+-- ============================================================
+-- 18. TABELA: ESTOQUE
+-- ============================================================
+
+CREATE TABLE estoque (
+    id_produto BIGINT PRIMARY KEY,
+
+    quantidade_atual NUMERIC(12,3) NOT NULL DEFAULT 0
+        CHECK (quantidade_atual >= 0),
+
+    CONSTRAINT fk_estoque_produto
+        FOREIGN KEY (id_produto)
+        REFERENCES produto(id_produto)
+);
+
+
+-- ============================================================
+-- 19. TABELA: MOVIMENTACAO_ESTOQUE
+-- ============================================================
+
+CREATE TABLE movimentacao_estoque (
+    id_movimentacao BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    id_produto BIGINT NOT NULL,
+    id_usuario BIGINT NOT NULL,
+
+    tipo VARCHAR(30) NOT NULL
+        CHECK (
+            tipo IN (
+                'ENTRADA_COMPRA',
+                'SAIDA_VENDA',
+                'AJUSTE_ENTRADA',
+                'AJUSTE_SAIDA',
+                'SAIDA_PERDA',
+                'SAIDA_AVARIA'
+            )
+        ),
+
+    quantidade NUMERIC(12,3) NOT NULL
+        CHECK (quantidade > 0),
+
+    data_movimentacao TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    motivo VARCHAR(255),
+
+    id_item_compra BIGINT,
+    id_item_venda BIGINT,
+
+    CONSTRAINT fk_mov_produto
+        FOREIGN KEY (id_produto)
+        REFERENCES produto(id_produto),
+
+    CONSTRAINT fk_mov_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES usuario(id_usuario),
+
+    CONSTRAINT fk_mov_item_compra
+        FOREIGN KEY (id_item_compra)
+        REFERENCES item_compra(id_item_compra),
+
+    CONSTRAINT fk_mov_item_venda
+        FOREIGN KEY (id_item_venda)
+        REFERENCES item_venda(id_item_venda)
+);
+
+
+-- ============================================================
+-- 20. INDICES
+-- ============================================================
+
+CREATE INDEX idx_produto_nome
+ON produto(nome);
+
+CREATE INDEX idx_cliente_nome
+ON cliente(nome);
+
+CREATE INDEX idx_fornecedor_razao
+ON fornecedor(razao_social);
+
+CREATE INDEX idx_compra_data
+ON compra(data_compra);
+
+CREATE INDEX idx_venda_data
+ON venda(data_venda);
+
+CREATE INDEX idx_movimentacao_data
+ON movimentacao_estoque(data_movimentacao);
+
+CREATE UNIQUE INDEX ux_movimentacao_item_compra
+ON movimentacao_estoque (id_item_compra)
+WHERE id_item_compra IS NOT NULL;
+
+CREATE UNIQUE INDEX ux_movimentacao_item_venda
+ON movimentacao_estoque (id_item_venda)
+WHERE id_item_venda IS NOT NULL;
+
+
+-- ============================================================
+-- 21. FUNÇÃO DE LOGIN
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION fn_autenticar_usuario(
+    p_login VARCHAR,
+    p_senha TEXT
+)
+RETURNS TABLE (
+    id_usuario BIGINT,
+    nome VARCHAR,
+    login VARCHAR,
+    perfil VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id_usuario BIGINT;
+BEGIN
+
+    SELECT u.id_usuario
+    INTO v_id_usuario
+    FROM usuario u
+    JOIN funcionario f
+        ON f.id_funcionario = u.id_funcionario
+    WHERE LOWER(u.login) = LOWER(p_login)
+      AND u.ativo = TRUE
+      AND f.ativo = TRUE
+      AND u.senha_hash = crypt(p_senha, u.senha_hash)
+    LIMIT 1;
+
+    IF v_id_usuario IS NULL THEN
+        RETURN;
+    END IF;
+
+    UPDATE usuario
+    SET ultimo_login = CURRENT_TIMESTAMP
+    WHERE usuario.id_usuario = v_id_usuario;
+
+    RETURN QUERY
+    SELECT
+        u.id_usuario,
+        f.nome,
+        u.login,
+        COALESCE(
+            STRING_AGG(
+                p.nome,
+                ', '
+                ORDER BY p.nome
+            ),
+            'SEM PERFIL'
+        )::VARCHAR AS perfil
+    FROM usuario u
+
+    JOIN funcionario f
+        ON f.id_funcionario = u.id_funcionario
+
+    LEFT JOIN usuario_perfil up
+        ON up.id_usuario = u.id_usuario
+
+    LEFT JOIN perfil p
+        ON p.id_perfil = up.id_perfil
+
+    WHERE u.id_usuario = v_id_usuario
+
+    GROUP BY
+        u.id_usuario,
+        f.nome,
+        u.login;
+
+END;
+$$;
+
+
+-- ============================================================
+-- 22. FUNÇÃO PARA VERIFICAR PERMISSÃO
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION fn_usuario_tem_permissao(
+    p_id_usuario BIGINT,
+    p_permissao VARCHAR
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_existe BOOLEAN;
+BEGIN
+
+    SELECT EXISTS (
+        SELECT 1
+
+        FROM usuario_perfil up
+
+        JOIN perfil_permissao pp
+            ON pp.id_perfil = up.id_perfil
+
+        JOIN permissao p
+            ON p.id_permissao = pp.id_permissao
+
+        WHERE up.id_usuario = p_id_usuario
+          AND p.nome = p_permissao
+    )
+    INTO v_existe;
+
+    RETURN v_existe;
+
+END;
+$$;
+
+
+-- ============================================================
+-- 23. FUNÇÃO DE ENTRADA DE COMPRA NO ESTOQUE
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION fn_processar_entrada_compra()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_item RECORD;
+BEGIN
+
+    FOR v_item IN
+        SELECT
+            id_item_compra,
+            id_produto,
+            quantidade
+
+        FROM item_compra
+
+        WHERE id_compra = NEW.id_compra
+    LOOP
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM movimentacao_estoque
+            WHERE id_item_compra = v_item.id_item_compra
+        ) THEN
+
+            INSERT INTO estoque (
+                id_produto,
+                quantidade_atual
+            )
+
+            VALUES (
+                v_item.id_produto,
+                v_item.quantidade
+            )
+
+            ON CONFLICT (id_produto)
+            DO UPDATE
+            SET quantidade_atual =
+                estoque.quantidade_atual
+                + EXCLUDED.quantidade_atual;
+
+
+            INSERT INTO movimentacao_estoque (
+                id_produto,
+                id_usuario,
+                tipo,
+                quantidade,
+                motivo,
+                id_item_compra
+            )
+
+            VALUES (
+                v_item.id_produto,
+                NEW.id_usuario,
+                'ENTRADA_COMPRA',
+                v_item.quantidade,
+                'Entrada referente à compra '
+                    || NEW.id_compra,
+                v_item.id_item_compra
+            );
+
+        END IF;
+
+    END LOOP;
+
+    RETURN NEW;
+
+END;
+$$;
+
+
+-- ============================================================
+-- 24. TRIGGER DA COMPRA
+-- ============================================================
+
+CREATE TRIGGER trg_compra_recebida
+
+AFTER UPDATE OF status
+
+ON compra
+
+FOR EACH ROW
+
+WHEN (
+    NEW.status = 'RECEBIDA'
+    AND OLD.status IS DISTINCT FROM 'RECEBIDA'
+)
+
+EXECUTE FUNCTION fn_processar_entrada_compra();
+
+
+-- ============================================================
+-- 25. FUNÇÃO DE SAÍDA DE VENDA DO ESTOQUE
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION fn_processar_saida_venda()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_item RECORD;
+    v_saldo NUMERIC(12,3);
+BEGIN
+
+    FOR v_item IN
+
+        SELECT
+            id_item_venda,
+            id_produto,
+            quantidade
+
+        FROM item_venda
+
+        WHERE id_venda = NEW.id_venda
+
+    LOOP
+
+        INSERT INTO estoque (
+            id_produto,
+            quantidade_atual
+        )
+
+        VALUES (
+            v_item.id_produto,
+            0
+        )
+
+        ON CONFLICT (id_produto)
+        DO NOTHING;
+
+
+        SELECT quantidade_atual
+        INTO v_saldo
+
+        FROM estoque
+
+        WHERE id_produto = v_item.id_produto
+
+        FOR UPDATE;
+
+
+        IF v_saldo < v_item.quantidade THEN
+
+            RAISE EXCEPTION
+                'Estoque insuficiente para o produto ID %. Estoque atual: %, solicitado: %',
+                v_item.id_produto,
+                v_saldo,
+                v_item.quantidade;
+
+        END IF;
+
+
+        IF NOT EXISTS (
+            SELECT 1
+
+            FROM movimentacao_estoque
+
+            WHERE id_item_venda =
+                  v_item.id_item_venda
+        ) THEN
+
+            UPDATE estoque
+
+            SET quantidade_atual =
+                quantidade_atual - v_item.quantidade
+
+            WHERE id_produto =
+                  v_item.id_produto;
+
+
+            INSERT INTO movimentacao_estoque (
+                id_produto,
+                id_usuario,
+                tipo,
+                quantidade,
+                motivo,
+                id_item_venda
+            )
+
+            VALUES (
+                v_item.id_produto,
+                NEW.id_usuario,
+                'SAIDA_VENDA',
+                v_item.quantidade,
+                'Saída referente à venda '
+                    || NEW.id_venda,
+                v_item.id_item_venda
+            );
+
+        END IF;
+
+    END LOOP;
+
+    RETURN NEW;
+
+END;
+$$;
+
+
+-- ============================================================
+-- 26. TRIGGER DA VENDA
+-- ============================================================
+
+CREATE TRIGGER trg_venda_finalizada
+
+AFTER UPDATE OF status
+
+ON venda
+
+FOR EACH ROW
+
+WHEN (
+    NEW.status = 'FINALIZADA'
+    AND OLD.status IS DISTINCT FROM 'FINALIZADA'
+)
+
+EXECUTE FUNCTION fn_processar_saida_venda();
+
+
+-- ============================================================
+-- 27. FUNÇÃO PARA AJUSTES, PERDAS E AVARIAS
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION fn_registrar_ajuste_estoque(
+    p_id_produto BIGINT,
+    p_id_usuario BIGINT,
+    p_tipo VARCHAR,
+    p_quantidade NUMERIC,
+    p_motivo VARCHAR
+)
+RETURNS VOID
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_saldo NUMERIC(12,3);
+BEGIN
+
+    IF p_quantidade <= 0 THEN
+        RAISE EXCEPTION
+            'A quantidade deve ser maior que zero.';
+    END IF;
+
+
+    IF p_tipo NOT IN (
+        'AJUSTE_ENTRADA',
+        'AJUSTE_SAIDA',
+        'SAIDA_PERDA',
+        'SAIDA_AVARIA'
+    ) THEN
+
+        RAISE EXCEPTION
+            'Tipo de ajuste inválido.';
+
+    END IF;
+
+
+    INSERT INTO estoque (
+        id_produto,
+        quantidade_atual
+    )
+
+    VALUES (
+        p_id_produto,
+        0
+    )
+
+    ON CONFLICT (id_produto)
+    DO NOTHING;
+
+
+    SELECT quantidade_atual
+    INTO v_saldo
+
+    FROM estoque
+
+    WHERE id_produto = p_id_produto
+
+    FOR UPDATE;
+
+
+    IF p_tipo IN (
+        'AJUSTE_SAIDA',
+        'SAIDA_PERDA',
+        'SAIDA_AVARIA'
+    ) THEN
+
+        IF v_saldo < p_quantidade THEN
+
+            RAISE EXCEPTION
+                'Estoque insuficiente. Estoque atual: %',
+                v_saldo;
+
+        END IF;
+
+
+        UPDATE estoque
+
+        SET quantidade_atual =
+            quantidade_atual - p_quantidade
+
+        WHERE id_produto =
+              p_id_produto;
+
+    ELSE
+
+        UPDATE estoque
+
+        SET quantidade_atual =
+            quantidade_atual + p_quantidade
+
+        WHERE id_produto =
+              p_id_produto;
+
+    END IF;
+
+
+    INSERT INTO movimentacao_estoque (
+        id_produto,
+        id_usuario,
+        tipo,
+        quantidade,
+        motivo
+    )
+
+    VALUES (
+        p_id_produto,
+        p_id_usuario,
+        p_tipo,
+        p_quantidade,
+        p_motivo
+    );
+
+END;
+$$;
+
+
+-- ============================================================
+-- 28. VIEW DE ESTOQUE
+-- ============================================================
+
+CREATE OR REPLACE VIEW vw_estoque AS
+
+SELECT
+    p.id_produto,
+    p.codigo,
+    p.nome,
+
+    c.nome AS categoria,
+
+    u.sigla AS unidade,
+
+    COALESCE(
+        e.quantidade_atual,
+        0
+    ) AS quantidade_atual,
+
+    p.estoque_minimo,
+
+    p.preco_venda,
+
+    CASE
+        WHEN COALESCE(
+            e.quantidade_atual,
+            0
+        ) <= p.estoque_minimo
+            THEN 'ESTOQUE BAIXO'
+
+        ELSE 'NORMAL'
+    END AS situacao
+
+FROM produto p
+
+JOIN categoria c
+    ON c.id_categoria = p.id_categoria
+
+JOIN unidade_medida u
+    ON u.id_unidade = p.id_unidade
+
+LEFT JOIN estoque e
+    ON e.id_produto = p.id_produto
+
+WHERE p.ativo = TRUE;
+
+
+-- ============================================================
+-- 29. VIEW DE COMPRAS
+-- ============================================================
+
+CREATE OR REPLACE VIEW vw_compras AS
+
+SELECT
+    c.id_compra,
+    c.data_compra,
+    c.status,
+
+    f.razao_social AS fornecedor,
+    f.cnpj,
+
+    COALESCE(
+        SUM(
+            (ic.quantidade * ic.valor_unitario)
+            - ic.desconto
+        ),
+        0
+    ) AS total_compra
+
+FROM compra c
+
+JOIN fornecedor f
+    ON f.id_fornecedor = c.id_fornecedor
+
+LEFT JOIN item_compra ic
+    ON ic.id_compra = c.id_compra
+
+GROUP BY
+    c.id_compra,
+    c.data_compra,
+    c.status,
+    f.razao_social,
+    f.cnpj;
+
+
+-- ============================================================
+-- 30. VIEW DE VENDAS
+-- ============================================================
+
+CREATE OR REPLACE VIEW vw_vendas AS
+
+SELECT
+    v.id_venda,
+    v.data_venda,
+    v.status,
+
+    COALESCE(
+        c.nome,
+        'CONSUMIDOR NÃO IDENTIFICADO'
+    ) AS cliente,
+
+    COALESCE(
+        SUM(
+            (iv.quantidade * iv.valor_unitario)
+            - iv.desconto
+        ),
+        0
+    ) - v.desconto AS total_venda
+
+FROM venda v
+
+LEFT JOIN cliente c
+    ON c.id_cliente = v.id_cliente
+
+LEFT JOIN item_venda iv
+    ON iv.id_venda = v.id_venda
+
+GROUP BY
+    v.id_venda,
+    v.data_venda,
+    v.status,
+    c.nome,
+    v.desconto;
+
+
+-- ============================================================
+-- 31. DADOS INICIAIS - CATEGORIAS
+-- ============================================================
+
+INSERT INTO categoria (
+    nome,
+    descricao
+)
+
+VALUES
+(
+    'Cimentos',
+    'Cimentos e materiais relacionados'
+),
+(
+    'Areia e Brita',
+    'Areia, brita e agregados'
+),
+(
+    'Tijolos e Blocos',
+    'Tijolos e blocos para construção'
+),
+(
+    'Tintas',
+    'Tintas e complementos'
+),
+(
+    'Ferramentas',
+    'Ferramentas para construção'
+);
+
+
+-- ============================================================
+-- 32. DADOS INICIAIS - UNIDADES
+-- ============================================================
+
+INSERT INTO unidade_medida (
+    sigla,
+    descricao
+)
+
+VALUES
+(
+    'UN',
+    'Unidade'
+),
+(
+    'KG',
+    'Quilograma'
+),
+(
+    'M',
+    'Metro'
+),
+(
+    'M2',
+    'Metro quadrado'
+),
+(
+    'M3',
+    'Metro cúbico'
+),
+(
+    'SC',
+    'Saco'
+);
+
+
+-- ============================================================
+-- 33. DADOS INICIAIS - PRODUTOS
+-- ============================================================
+
+INSERT INTO produto (
+    codigo,
+    nome,
+    descricao,
+    id_categoria,
+    id_unidade,
+    preco_venda,
+    estoque_minimo
+)
+
+VALUES
+(
+    'CIM001',
+    'Cimento CP II',
+    'Cimento para construção',
+
+    (
+        SELECT id_categoria
+        FROM categoria
+        WHERE nome = 'Cimentos'
+    ),
+
+    (
+        SELECT id_unidade
+        FROM unidade_medida
+        WHERE sigla = 'SC'
+    ),
+
+    38.90,
+    20
+),
+
+(
+    'ARE001',
+    'Areia Média',
+    'Areia média para construção',
+
+    (
+        SELECT id_categoria
+        FROM categoria
+        WHERE nome = 'Areia e Brita'
+    ),
+
+    (
+        SELECT id_unidade
+        FROM unidade_medida
+        WHERE sigla = 'M3'
+    ),
+
+    120.00,
+    5
+),
+
+(
+    'TJO001',
+    'Tijolo 6 Furos',
+    'Tijolo cerâmico 6 furos',
+
+    (
+        SELECT id_categoria
+        FROM categoria
+        WHERE nome = 'Tijolos e Blocos'
+    ),
+
+    (
+        SELECT id_unidade
+        FROM unidade_medida
+        WHERE sigla = 'UN'
+    ),
+
+    1.20,
+    500
+),
+
+(
+    'TIN001',
+    'Tinta Acrílica 18L',
+    'Tinta acrílica branca',
+
+    (
+        SELECT id_categoria
+        FROM categoria
+        WHERE nome = 'Tintas'
+    ),
+
+    (
+        SELECT id_unidade
+        FROM unidade_medida
+        WHERE sigla = 'UN'
+    ),
+
+    289.90,
+    5
+),
+
+(
+    'FER001',
+    'Furadeira',
+    'Furadeira elétrica 500W',
+
+    (
+        SELECT id_categoria
+        FROM categoria
+        WHERE nome = 'Ferramentas'
+    ),
+
+    (
+        SELECT id_unidade
+        FROM unidade_medida
+        WHERE sigla = 'UN'
+    ),
+
+    349.90,
+    3
+);
+
+
+-- ============================================================
+-- 34. CRIAR ESTOQUE INICIAL
+-- ============================================================
+
+INSERT INTO estoque (
+    id_produto,
+    quantidade_atual
+)
+
+SELECT
+    id_produto,
+    0
+
+FROM produto;
+
+
+-- ============================================================
+-- 35. DADOS INICIAIS - FORNECEDORES
+-- ============================================================
+
+INSERT INTO fornecedor (
+    razao_social,
+    nome_fantasia,
+    cnpj,
+    telefone,
+    email,
+    endereco,
+    cidade,
+    estado
+)
+
+VALUES
+(
+    'Distribuidora ConstruMais LTDA',
+    'ConstruMais',
+    '12.345.678/0001-90',
+    '(49) 99999-1111',
+    'contato@construmais.com.br',
+    'Rua das Obras, 100',
+    'São Miguel do Oeste',
+    'SC'
+),
+
+(
+    'Materiais Brasil LTDA',
+    'Materiais Brasil',
+    '98.765.432/0001-10',
+    '(49) 98888-2222',
+    'vendas@materiaisbrasil.com.br',
+    'Avenida Brasil, 500',
+    'Guaraciaba',
+    'SC'
+);
+
+
+-- ============================================================
+-- 36. DADOS INICIAIS - CLIENTES
+-- ============================================================
+
+INSERT INTO cliente (
+    tipo_pessoa,
+    nome,
+    cpf_cnpj,
+    telefone,
+    email,
+    endereco,
+    cidade,
+    estado
+)
+
+VALUES
+(
+    'PF',
+    'João da Silva',
+    '123.456.789-00',
+    '(49) 99999-3333',
+    'joao@email.com',
+    'Rua A, 10',
+    'Guaraciaba',
+    'SC'
+),
+
+(
+    'PF',
+    'Maria Oliveira',
+    '987.654.321-00',
+    '(49) 99999-4444',
+    'maria@email.com',
+    'Rua B, 20',
+    'Princesa',
+    'SC'
+),
+
+(
+    'PJ',
+    'Construtora Exemplo LTDA',
+    '11.222.333/0001-44',
+    '(49) 99999-5555',
+    'contato@construtora.com',
+    'Rua C, 30',
+    'São Miguel do Oeste',
+    'SC'
+);
+
+
+-- ============================================================
+-- 37. DADOS INICIAIS - FUNCIONARIOS
+-- ============================================================
+
+INSERT INTO funcionario (
+    nome,
+    cpf,
+    telefone,
+    email,
+    cargo,
+    data_admissao
+)
+
+VALUES
+(
+    'Administrador do Sistema',
+    '111.111.111-11',
+    '(49) 99999-1000',
+    'admin@ebrick.com',
+    'Administrador',
+    CURRENT_DATE
+),
+
+(
+    'João Vendedor',
+    '222.222.222-22',
+    '(49) 99999-2000',
+    'joao@ebrick.com',
+    'Vendedor',
+    CURRENT_DATE
+),
+
+(
+    'Carlos Estoque',
+    '333.333.333-33',
+    '(49) 99999-3000',
+    'carlos@ebrick.com',
+    'Estoquista',
+    CURRENT_DATE
+);
+
+
+-- ============================================================
+-- 38. DADOS INICIAIS - PERFIS
+-- ============================================================
+
+INSERT INTO perfil (
+    nome,
+    descricao
+)
+
+VALUES
+(
+    'ADMINISTRADOR',
+    'Acesso completo ao sistema EBrick'
+),
+
+(
+    'GERENTE',
+    'Acesso gerencial'
+),
+
+(
+    'VENDEDOR',
+    'Realização de vendas e atendimento'
+),
+
+(
+    'ESTOQUE',
+    'Controle de estoque e compras'
+),
+
+(
+    'ATENDENTE',
+    'Cadastro e consulta de clientes'
+);
+
+
+-- ============================================================
+-- 39. DADOS INICIAIS - PERMISSOES
+-- ============================================================
+
+INSERT INTO permissao (
+    nome,
+    descricao
+)
+
+VALUES
+(
+    'CADASTRAR_PRODUTO',
+    'Cadastrar produtos'
+),
+
+(
+    'EDITAR_PRODUTO',
+    'Editar produtos'
+),
+
+(
+    'EXCLUIR_PRODUTO',
+    'Excluir produtos'
+),
+
+(
+    'CADASTRAR_CLIENTE',
+    'Cadastrar clientes'
+),
+
+(
+    'EDITAR_CLIENTE',
+    'Editar clientes'
+),
+
+(
+    'CADASTRAR_FORNECEDOR',
+    'Cadastrar fornecedores'
+),
+
+(
+    'EDITAR_FORNECEDOR',
+    'Editar fornecedores'
+),
+
+(
+    'REALIZAR_COMPRA',
+    'Registrar compras'
+),
+
+(
+    'REALIZAR_VENDA',
+    'Registrar vendas'
+),
+
+(
+    'CONSULTAR_ESTOQUE',
+    'Consultar estoque'
+),
+
+(
+    'ALTERAR_ESTOQUE',
+    'Realizar ajustes de estoque'
+),
+
+(
+    'GERAR_RELATORIO',
+    'Gerar relatórios'
+),
+
+(
+    'GERENCIAR_USUARIOS',
+    'Gerenciar usuários'
+),
+
+(
+    'GERENCIAR_PERMISSOES',
+    'Gerenciar permissões'
+);
+
+
+-- ============================================================
+-- 40. USUARIOS INICIAIS
+-- ============================================================
+
+INSERT INTO usuario (
+    id_funcionario,
+    login,
+    senha_hash
+)
+
+VALUES
+(
+    (
+        SELECT id_funcionario
+        FROM funcionario
+        WHERE email = 'admin@ebrick.com'
+    ),
+
+    'admin',
+
+    crypt(
+        'admin123',
+        gen_salt('bf', 12)
+    )
+),
+
+(
+    (
+        SELECT id_funcionario
+        FROM funcionario
+        WHERE email = 'joao@ebrick.com'
+    ),
+
+    'vendedor',
+
+    crypt(
+        'vendedor123',
+        gen_salt('bf', 12)
+    )
+);
+
+
+-- ============================================================
+-- 41. PERFIL DO ADMINISTRADOR
+-- ============================================================
+
+INSERT INTO usuario_perfil (
+    id_usuario,
+    id_perfil
+)
+
+SELECT
+    u.id_usuario,
+    p.id_perfil
+
+FROM usuario u
+
+JOIN perfil p
+    ON p.nome = 'ADMINISTRADOR'
+
+WHERE u.login = 'admin';
+
+
+-- ============================================================
+-- 42. PERFIL DO VENDEDOR
+-- ============================================================
+
+INSERT INTO usuario_perfil (
+    id_usuario,
+    id_perfil
+)
+
+SELECT
+    u.id_usuario,
+    p.id_perfil
+
+FROM usuario u
+
+JOIN perfil p
+    ON p.nome = 'VENDEDOR'
+
+WHERE u.login = 'vendedor';
+
+
+-- ============================================================
+-- 43. TODAS AS PERMISSOES PARA O ADMINISTRADOR
+-- ============================================================
+
+INSERT INTO perfil_permissao (
+    id_perfil,
+    id_permissao
+)
+
+SELECT
+    p.id_perfil,
+    pe.id_permissao
+
+FROM perfil p
+
+CROSS JOIN permissao pe
+
+WHERE p.nome = 'ADMINISTRADOR';
+
+
+-- ============================================================
+-- 44. PERMISSOES DO VENDEDOR
+-- ============================================================
+
+INSERT INTO perfil_permissao (
+    id_perfil,
+    id_permissao
+)
+
+SELECT
+    p.id_perfil,
+    pe.id_permissao
+
+FROM perfil p
+
+JOIN permissao pe
+    ON pe.nome IN (
+        'CADASTRAR_CLIENTE',
+        'EDITAR_CLIENTE',
+        'REALIZAR_VENDA',
+        'CONSULTAR_ESTOQUE'
+    )
+
+WHERE p.nome = 'VENDEDOR';
+
+
+-- ============================================================
+-- FIM
+-- ============================================================
