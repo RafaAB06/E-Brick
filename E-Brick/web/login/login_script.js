@@ -18,9 +18,9 @@ async function handle_login() {//tudo async nessa bomba
     };
 
     const result = await lib.post("/login", json);
-    if(result.response.ok){
+    if (result.response.ok) {
         window.location.href = "/sistema/index.html";
-    }else{
+    } else {
         login_erro.textContent = result.message;
     }
 }

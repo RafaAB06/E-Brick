@@ -7,16 +7,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 
 import br.edu.unoesc.ebrick.http.HttpUtils;
 import br.edu.unoesc.ebrick.utils.FileUtils;
 
-public class HandlerBasico implements HttpHandler {	
-	private String requestURI;
-	
+public class HandlerBasico extends Handler {	
 	public HandlerBasico(String requestURI) {
-		this.requestURI = requestURI;
+		super(requestURI);
 	}
 
 	@Override
@@ -52,10 +49,6 @@ public class HandlerBasico implements HttpHandler {
 	}
 	
 	protected void handleGetSemPagina(HttpExchange exchange) throws IOException{
-		return;
-	}
-	
-	public String getRequestURI() {
-		return requestURI;
+		HttpUtils.mudarLocation(exchange, String.format("%s/index.html", getRequestURI()));
 	}
 }

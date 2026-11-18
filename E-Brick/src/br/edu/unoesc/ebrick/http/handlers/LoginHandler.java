@@ -52,15 +52,14 @@ public class LoginHandler extends HandlerBasico {
 			resposta = new Resposta(HttpURLConnection.HTTP_INTERNAL_ERROR, "Erro desconhecido");
 			e.printStackTrace();
 		}
-
+		
 		HttpUtils.send(exchange, resposta, HttpUtils.TEXT_PLAIN);
 	}
 
-	private void validarSessao(HttpExchange exchange, Usuario usuario) {
+	private void validarSessao(HttpExchange exchange, Usuario usuario) throws IOException {
 		String idSessao = Cookies.getCookieSessao(exchange);
-		System.out.println(idSessao);
 		
-		if(!Sessoes.getInstancia().sessaoValida(idSessao)) {
+		if(!Sessoes.getInstancia().sessaoValida(idSessao)){
 			String token = Sessoes.getInstancia().criarSessao(usuario);
 			
 			Cookies.addCookieSessao(exchange, token);

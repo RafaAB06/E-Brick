@@ -6,6 +6,7 @@ import java.net.HttpURLConnection;
 
 import com.sun.net.httpserver.HttpExchange;
 
+import br.edu.unoesc.ebrick.auth.AuthUtils;
 import br.edu.unoesc.ebrick.utils.FileUtils;
 
 public final class HttpUtils {
@@ -17,7 +18,11 @@ public final class HttpUtils {
     public static final String TEXT_JAVASCRIPT = "text/javascript; charset=UTF-8";
     public static final String APPLICATION_JSON = "application/json; charset=UTF-8";
     public static final String IMAGE_PNG = "image/png; charset=UTF-8";
+    
     public static final int SEM_CORPO = -1;
+    
+    public static final String PAGINA_LOGIN = "/login/index.html";
+    public static final String PAGINA_SISTEMA = "/sistema/index.html";
     
     public static boolean IsGet(HttpExchange exchange) {
     	return exchange.getRequestMethod().equalsIgnoreCase("GET");
@@ -55,6 +60,6 @@ public final class HttpUtils {
     
     public static void mudarLocation(HttpExchange exchange, String location) throws IOException{
     	exchange.getResponseHeaders().set("Location", location);
-    	exchange.sendResponseHeaders(HttpURLConnection.HTTP_MOVED_TEMP, SEM_CORPO);
+    	exchange.sendResponseHeaders(HttpURLConnection.HTTP_SEE_OTHER, SEM_CORPO);    	
     }
 }

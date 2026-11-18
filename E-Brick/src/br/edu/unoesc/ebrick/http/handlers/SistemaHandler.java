@@ -18,9 +18,7 @@ import br.edu.unoesc.ebrick.http.Server;
 public class SistemaHandler extends HandlerAutenticado{	
 	public SistemaHandler(String requestPath) {
 		super(requestPath);
-		Server.addListener("/sistema/sistema_script.js", new FileHandler("web/sistema/sistema_script.js" , HttpUtils.TEXT_JAVASCRIPT));
-		Server.addListener("/sistema/sistema_style.css", new FileHandler("web/sistema/sistema_style.css" , HttpUtils.TEXT_CSS));
-		Server.addListener("/sistema/abas", abasHandler);
+		Server.addListener(abasHandler);
 		
 		//List<Permissao> permissoes = Permissoes.getInstancia().getTodasPermissoes();
 		//for(Permissao permissao : permissoes) {
@@ -31,14 +29,19 @@ public class SistemaHandler extends HandlerAutenticado{
 	
 	@Override
 	protected void handleAutenticado(HttpExchange exchange) throws IOException {
+		super.handleAutenticado(exchange);
+		
 		if(HttpUtils.IsGet(exchange)) {
 			HttpUtils.send(exchange, HttpURLConnection.HTTP_OK, "web/sistema/index.html", HttpUtils.TEXT_HTML);
 		}
 	}
 	
-	private HttpHandler abasHandler = new HttpHandler() {
+	private Handler abasHandler = new Handler("/sistema/abas") {
 		@Override
 		public void handle(HttpExchange exchange) throws IOException {
+			boolean get = HttpUtils.IsGet(exchange);
+			if(!get) return;
+			
 			Usuario user = AuthUtils.getUsuarioAutenticado(exchange);
 			if(user == null) return;
 

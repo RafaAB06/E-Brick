@@ -3,23 +3,24 @@ package br.edu.unoesc.ebrick.http.handlers;
 import java.io.IOException;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 
-import br.edu.unoesc.ebrick.auth.Sessoes;
-import br.edu.unoesc.ebrick.http.Cookies;
+import br.edu.unoesc.ebrick.auth.AuthUtils;
 import br.edu.unoesc.ebrick.http.HttpUtils;
 
-public class HandlerPadrao implements HttpHandler{
+public class HandlerPadrao extends Handler{
+	public HandlerPadrao(String requestURI) {
+		super(requestURI);
+	}
+
 	@Override
 	public void handle(HttpExchange exchange) throws IOException {
 		if(HttpUtils.IsGet(exchange)) {
-			String token = Cookies.getCookieSessao(exchange);
-			String destino = null;
+			String destino;
 			
-			if(Sessoes.getInstancia().sessaoValida(token)) {
-				destino = "/sistema";
+			if(AuthUtils.autenticado(exchange)) {
+				destino = HttpUtils.PAGINA_SISTEMA;
 			}else {
-				destino = "/login";
+				destino = HttpUtils.PAGINA_LOGIN;
 			}
 			
 			HttpUtils.mudarLocation(exchange, destino);

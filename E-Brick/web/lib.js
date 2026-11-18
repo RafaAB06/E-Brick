@@ -38,7 +38,7 @@ export async function post(path, json) {
     };
 
     try {
-        result.response = await fetch(path, {
+        const response =  await fetch(path, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -46,6 +46,10 @@ export async function post(path, json) {
             body: JSON.stringify(json),
             signal: controller.signal
         });
+        if(!response.ok){
+            result.message = await response.text();
+        }
+        result.response = response;
 
     } catch (error) {
         result.message = error.name === 'AbortError'

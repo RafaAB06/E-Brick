@@ -4,13 +4,13 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
-import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
-import br.edu.unoesc.ebrick.http.handlers.HandlerBasico;
+import br.edu.unoesc.ebrick.http.handlers.Handler;
 
 public final class Server {
 	private static HttpServer server;
+	private Server() {}
 
 	public static void start(int port) throws IOException {
 		server = HttpServer.create(new InetSocketAddress(port), 0);
@@ -24,11 +24,7 @@ public final class Server {
 		server.stop(0);
 	}
 
-	public static void addListener(String path, HttpHandler handler) {
-		server.createContext(path, handler);
-	}
-	
-	public static void addListener(HandlerBasico handler) {
+	public static void addListener(Handler handler) {
 		server.createContext(handler.getRequestURI(), handler);
 	}
 }

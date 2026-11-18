@@ -8,11 +8,13 @@ import com.sun.net.httpserver.HttpHandler;
 
 import br.edu.unoesc.ebrick.http.HttpUtils;
 
-public class FileHandler implements HttpHandler {
+public class FileHandler extends Handler {
 	private String file;
 	private String type;
 	
-	public FileHandler(String file, String type) {
+	public FileHandler(String uri, String file, String type) {
+		super(uri);
+		
 		this.file = file;
 		this.type = type;
 	}

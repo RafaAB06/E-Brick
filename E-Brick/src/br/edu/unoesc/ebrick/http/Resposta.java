@@ -21,4 +21,9 @@ public class Resposta {
 	public String getMensagem() {
 		return mensagem;
 	}
+	
+	@Override
+	public String toString() {
+		return "Resposta [codigo=" + codigo + ", mensagem=" + mensagem + "]";
+	}
 }
