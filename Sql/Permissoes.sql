@@ -4,11 +4,11 @@ CREATE TABLE permissao (
 );
 
 INSERT INTO permissao(id, nome) VALUES 
+('fornecedores', 'Fornecedores'),
 ('vendas', 'Vendas'),
 ('clientes', 'Clientes'),
-('cadastro_clientes', 'Cadastro de Clientes'),
 ('estoque', 'Estoque'),
-('cadastro_estoque', 'Cadastro Estoque'),
 ('usuarios', 'Usuários');
+DELETE FROM permissao AS p WHERE p.id = 'cadastro_clientes' OR p.id =  'cadastro_estoque'
 
 SELECT * FROM permissao;

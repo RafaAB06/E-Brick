@@ -7,7 +7,6 @@ import java.util.List;
 import org.json.JSONArray;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 
 import br.edu.unoesc.ebrick.auth.AuthUtils;
 import br.edu.unoesc.ebrick.auth.entities.Permissao;
@@ -15,28 +14,25 @@ import br.edu.unoesc.ebrick.auth.entities.Usuario;
 import br.edu.unoesc.ebrick.http.HttpUtils;
 import br.edu.unoesc.ebrick.http.Server;
 
-public class SistemaHandler extends HandlerAutenticado{	
-	public SistemaHandler(String requestPath) {
+public class InicioHandler extends HandlerAutenticado{	
+	public InicioHandler(String requestPath) {
 		super(requestPath);
-		Server.addListener(abasHandler);
-		
-		//List<Permissao> permissoes = Permissoes.getInstancia().getTodasPermissoes();
-		//for(Permissao permissao : permissoes) {
-			//String url = String.format("/sistema/%s", permissao.getId());
-			//Server.addListener(url, new HandlerAba(permissao));
-		//}
+		Server server = Server.getInstancia();
+		server.addListener(abasHandler);
+				
+//		List<Permissao> permissoes = Permissoes.getInstancia().getTodasPermissoes();
+//		for(Permissao permissao : permissoes) {
+//			String url = String.format("/%s", permissao.getId());
+//			server.addListener(new HandlerAutorizado(url, permissao));
+//		}
 	}
 	
 	@Override
 	protected void handleAutenticado(HttpExchange exchange) throws IOException {
 		super.handleAutenticado(exchange);
-		
-		if(HttpUtils.IsGet(exchange)) {
-			HttpUtils.send(exchange, HttpURLConnection.HTTP_OK, "web/sistema/index.html", HttpUtils.TEXT_HTML);
-		}
 	}
 	
-	private Handler abasHandler = new Handler("/sistema/abas") {
+	private Handler abasHandler = new Handler("/abas") {
 		@Override
 		public void handle(HttpExchange exchange) throws IOException {
 			boolean get = HttpUtils.IsGet(exchange);

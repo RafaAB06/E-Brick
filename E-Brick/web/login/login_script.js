@@ -19,8 +19,25 @@ async function handle_login() {//tudo async nessa bomba
 
     const result = await lib.post("/login", json);
     if (result.response.ok) {
-        window.location.href = "/sistema/index.html";
+        window.location.href = "/inicio/index.html";
     } else {
         login_erro.textContent = result.message;
     }
 }
+
+const toggle = document.getElementById("mostrar_senha")
+const input = document.getElementById("senha_input")
+
+var escondido = true
+
+toggle.addEventListener("click", () => {
+    if(escondido){
+        toggle.textContent = "Esconder";
+        input.type = "text";
+    }else{
+        toggle.textContent = "Mostrar";
+        input.type = "password";
+    }
+
+    escondido = !escondido;
+});

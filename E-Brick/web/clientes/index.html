@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="clientes_style.css" rel="stylesheet">
+    <link href="/lib.css" rel="stylesheet">
+</head>
+<body>
+    <div class="d-flex">
+        <main class="roundy">
+            <div id="overlay" class="overlay hidden">
+                <div class="edicao-cliente roundy sombra">
+                    <div class="ativo-container">
+                        <h1 id="titulo">Editar Cliente</h1>
+                        <button id="fechar-edicao" type="button" class="btn-close" aria-label="Close"></button>
+                    </div>
+                    <label>Nome: </label>
+                    <input id="nome" type="text" maxlength="150">
+                    <label id="cpf_cnpj"></label>
+                    <div class="ativo-container">
+                        <input id="cpf_cnpj_valor" type="text">
+                        <select id="tipo">
+                            <option value="cpf">CPF</option>
+                            <option value="cnpj">CNPJ</option>
+                        </select>
+                    </div>
+                    <label>E-mail: </label>
+                    <input id="email" type="email" placeholder="">
+                    <label>Telefone: </label>
+                    <input id="telefone" type="text">
+                    <label>Endereço: </label>
+                    <input id="endereco" type="text" >
+                    <label>Cidade: </label>
+                    <input id="cidade" type="text">
+                    <label>Estado: </label>
+                    <input id="estado" type="text">
+                    <div class="ativo-container">
+                        <label id="ativo-label">Ativo: </label>
+                        <input id="ativo" type="checkbox">
+                    </div>
+                    <div class="ativo-container"> 
+                        <button id="salvar" type="button" class="btn btn-outline-success">Salvar</button>
+                        <button id="excluir" type="button" class="btn btn-danger">Excluir</button>
+                    </div>
+                    <small id="salvar_erro" class="text-danger"></small>
+                </div>
+            </div>
+            <div class="titulo">
+                <div class="ativo-container">
+                    <h1 style="color:white;">CLIENTES</h1>
+                    <button id="adicionar-cliente" type="button" class="btn btn-success">+</button>
+                </div>
+                <hr style="color:white;">
+            </div>
+            <div class="clientes_opcoes">
+                <input id="pesquisa" placeholder="Pesquise por nome, CPF/CNPJ, cidade ou estado">
+                <label class="label">Ordenado por:</label>
+                <select id="ordem">
+                    <option value="nome">Nome</option>
+                    <option value="cpf/cnpj">CPF/CNPJ</option>
+                    <option value="ativo">Ativo</option>
+                    <option value="cidade">Cidade</option>
+                    <option value="estado">Estado</option>
+                </select>
+                <label class="label">Quantidade por página:</label>
+                <div id="qtds" class="btn-group" role="group" aria-label="Basic outlined example">
+                </div>
+            </div>
+            <div id="clientes" class="clientes_display">
+
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="clientes_script.js"></script>
+    <script type="module" src="edicao_clientes.js"></script>
+</body>
+
+</html>

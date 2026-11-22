@@ -6,7 +6,6 @@ import java.net.HttpURLConnection;
 
 import com.sun.net.httpserver.HttpExchange;
 
-import br.edu.unoesc.ebrick.auth.AuthUtils;
 import br.edu.unoesc.ebrick.utils.FileUtils;
 
 public final class HttpUtils {
@@ -22,7 +21,7 @@ public final class HttpUtils {
     public static final int SEM_CORPO = -1;
     
     public static final String PAGINA_LOGIN = "/login/index.html";
-    public static final String PAGINA_SISTEMA = "/sistema/index.html";
+    public static final String PAGINA_INICIO = "/inicio/index.html";
     
     public static boolean IsGet(HttpExchange exchange) {
     	return exchange.getRequestMethod().equalsIgnoreCase("GET");

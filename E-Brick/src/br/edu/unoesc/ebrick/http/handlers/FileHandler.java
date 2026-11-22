@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 
 import br.edu.unoesc.ebrick.http.HttpUtils;
 

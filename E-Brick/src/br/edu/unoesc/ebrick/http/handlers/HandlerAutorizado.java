@@ -5,19 +5,20 @@ import java.io.IOException;
 import com.sun.net.httpserver.HttpExchange;
 
 import br.edu.unoesc.ebrick.auth.AuthUtils;
-import br.edu.unoesc.ebrick.auth.Sessoes;
 import br.edu.unoesc.ebrick.auth.entities.Permissao;
-import br.edu.unoesc.ebrick.auth.entities.Usuario;
-import br.edu.unoesc.ebrick.http.Cookies;
 import br.edu.unoesc.ebrick.http.HttpUtils;
 
 public class HandlerAutorizado extends HandlerAutenticado{
 	protected Permissao permissao;
 	
-	public HandlerAutorizado(String requestPath, Permissao permissao) {
-		super(requestPath);
+	public HandlerAutorizado(String requestPath, String fallback, Permissao permissao) {
+		super(requestPath, fallback);
 		
 		this.permissao = permissao;
+	}
+	
+	public HandlerAutorizado(String requestPath, Permissao permissao) {
+		this(requestPath, HttpUtils.PAGINA_INICIO, permissao);
 	}
 
 	@Override
@@ -25,11 +26,11 @@ public class HandlerAutorizado extends HandlerAutenticado{
 		if(AuthUtils.autorizado(exchange, permissao)) {
 			handleAutorizado(exchange);
 		}else {
-			HttpUtils.mudarLocation(exchange, "/sistema");
+			HttpUtils.mudarLocation(exchange, fallback);
 		}
     }
 
-	private void handleAutorizado(HttpExchange exchange) throws IOException {
+	protected void handleAutorizado(HttpExchange exchange) throws IOException {
 		super.handleAutenticado(exchange);
 	}
 }

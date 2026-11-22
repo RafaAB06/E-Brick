@@ -16,7 +16,11 @@ public class Usuario{
 	}
 	
 	public boolean temPermissao(Permissao permissao) {
-		return permissoes.contains(permissao);
+		for(Permissao p : permissoes) {
+			if(permissao.equals(p)) return true;
+		}
+		
+		return false;
 	}
 	
 	public String getLogin() {

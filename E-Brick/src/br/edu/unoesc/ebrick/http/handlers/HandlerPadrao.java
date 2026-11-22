@@ -18,7 +18,7 @@ public class HandlerPadrao extends Handler{
 			String destino;
 			
 			if(AuthUtils.autenticado(exchange)) {
-				destino = HttpUtils.PAGINA_SISTEMA;
+				destino = HttpUtils.PAGINA_INICIO;
 			}else {
 				destino = HttpUtils.PAGINA_LOGIN;
 			}

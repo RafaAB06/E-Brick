@@ -4,12 +4,14 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import br.edu.unoesc.ebrick.auth.Usuarios;
+import br.edu.unoesc.ebrick.auth.entities.Permissao;
 import br.edu.unoesc.ebrick.http.HttpUtils;
 import br.edu.unoesc.ebrick.http.Server;
+import br.edu.unoesc.ebrick.http.handlers.ClientesHandler;
 import br.edu.unoesc.ebrick.http.handlers.FileHandler;
 import br.edu.unoesc.ebrick.http.handlers.HandlerPadrao;
+import br.edu.unoesc.ebrick.http.handlers.InicioHandler;
 import br.edu.unoesc.ebrick.http.handlers.LoginHandler;
-import br.edu.unoesc.ebrick.http.handlers.SistemaHandler;
 import br.edu.unoesc.ebrick.sql.SqlConnection;
 
 public class Main {
@@ -53,13 +55,15 @@ public class Main {
 	private static boolean iniciarServidor() {
 		boolean sucess = true;
 		try {
-			Server.start(8080);
-			Server.addListener(new HandlerPadrao("/"));
-			Server.addListener(new LoginHandler("/login"));	
-			Server.addListener(new SistemaHandler("/sistema"));	
-			//Server.addListener("/cadastro_cliente", new CadastroHandler());
+			Server server = Server.getInstancia();
+			server.start(7777);
+			server.addListener(new HandlerPadrao("/"));
+			server.addListener(new LoginHandler("/login"));	
+			server.addListener(new InicioHandler("/inicio"));				
+			server.addListener(new FileHandler("/lib.js", "web/lib.js", HttpUtils.TEXT_JAVASCRIPT));
+			server.addListener(new FileHandler("/lib.css", "web/lib.css", HttpUtils.TEXT_CSS));
 			
-			Server.addListener(new FileHandler("/lib.js", "web/lib.js", HttpUtils.TEXT_JAVASCRIPT));
+			server.addListener(new ClientesHandler("/clientes", new Permissao("clientes", "Clientes")));
 			
 		}catch(IOException e) {
 			System.out.println("Falha ao iniciar servidor!");//omaigá

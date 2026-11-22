@@ -8,8 +8,18 @@ import br.edu.unoesc.ebrick.auth.AuthUtils;
 import br.edu.unoesc.ebrick.http.HttpUtils;
 
 public class HandlerAutenticado extends HandlerBasico {
+	protected String fallback;
+	
 	public HandlerAutenticado(String requestPath) {
+		super(requestPath);	
+		
+		fallback = HttpUtils.PAGINA_LOGIN;
+	}
+	
+	public HandlerAutenticado(String requestPath, String fallback) {
 		super(requestPath);
+		
+		this.fallback = fallback;
 	}
 
 	@Override
@@ -22,10 +32,10 @@ public class HandlerAutenticado extends HandlerBasico {
     }
 
     protected void handleAutenticado(HttpExchange exchange) throws IOException{
-    	super.handle(exchange);
+    	super.handle(exchange);    	
     }
 
     private void handleNaoAutenticado(HttpExchange exchange) throws IOException{
-    	HttpUtils.mudarLocation(exchange, HttpUtils.PAGINA_LOGIN);
+    	HttpUtils.mudarLocation(exchange, fallback);
     }
 }

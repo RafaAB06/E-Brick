@@ -7,10 +7,9 @@ CREATE TABLE usuario_permissao (
 
 INSERT INTO usuario_permissao(usuario_id, permissao_id) VALUES
 (1, 'vendas'),
+(1, 'fornecedores'),
 (1, 'clientes'),
-(1, 'cadastro_clientes'),
 (1, 'estoque'),
-(1, 'cadastro_estoque'),
 (1, 'usuarios');
 
 CREATE OR REPLACE FUNCTION obter_permissoes(p_login VARCHAR)

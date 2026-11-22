@@ -32,7 +32,12 @@ public class Permissao {
 	}
 	
 	@Override
+	public boolean equals(Object other) {
+		return ((Permissao)other).getId().equals(id);
+	}
+	
+	@Override
 	public String toString() {
-	    return nome;
+	    return id;
 	}
 }

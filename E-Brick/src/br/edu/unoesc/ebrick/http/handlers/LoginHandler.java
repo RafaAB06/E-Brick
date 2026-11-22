@@ -6,7 +6,6 @@ import java.net.HttpURLConnection;
 import org.json.JSONObject;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 
 import br.edu.unoesc.ebrick.auth.Sessoes;
 import br.edu.unoesc.ebrick.auth.Usuarios;
@@ -14,7 +13,6 @@ import br.edu.unoesc.ebrick.auth.entities.Usuario;
 import br.edu.unoesc.ebrick.http.Cookies;
 import br.edu.unoesc.ebrick.http.HttpUtils;
 import br.edu.unoesc.ebrick.http.Resposta;
-import br.edu.unoesc.ebrick.http.Server;
 
 public class LoginHandler extends HandlerBasico {	
 	public LoginHandler(String requestURI) {
