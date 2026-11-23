@@ -86,18 +86,16 @@ CREATE TABLE fornecedor (
 
 
 -- ============================================================
--- 6. TABELA: CLIENTE
+-- 6. TABELA: CLIENTE (ALTERADA - sem cpf_cnpj)
 -- ============================================================
 
 CREATE TABLE cliente (
-    id_cliente BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
     tipo_pessoa VARCHAR(2) NOT NULL
         CHECK (tipo_pessoa IN ('PF', 'PJ')),
 
     nome VARCHAR(150) NOT NULL,
-
-    cpf_cnpj VARCHAR(18) UNIQUE,
 
     telefone VARCHAR(20),
     email VARCHAR(150),
@@ -107,6 +105,38 @@ CREATE TABLE cliente (
     estado CHAR(2),
 
     ativo BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+
+-- ============================================================
+-- 6.1. TABELA: PESSOA FISICA (NOVA)
+-- ============================================================
+
+CREATE TABLE pessoa_fisica (
+    cpf VARCHAR(11) PRIMARY KEY
+        CHECK (cpf ~ '^[0-9]{11}$'),
+
+    cliente_id BIGINT NOT NULL UNIQUE,
+
+    CONSTRAINT fk_pessoa_fisica_cliente
+        FOREIGN KEY (cliente_id)
+        REFERENCES cliente(id)
+);
+
+
+-- ============================================================
+-- 6.2. TABELA: PESSOA JURIDICA (NOVA)
+-- ============================================================
+
+CREATE TABLE pessoa_juridica (
+    cnpj VARCHAR(14) PRIMARY KEY
+        CHECK (cnpj ~ '^[0-9]{14}$'),
+
+    cliente_id BIGINT NOT NULL UNIQUE,
+
+    CONSTRAINT fk_pessoa_juridica_cliente
+        FOREIGN KEY (cliente_id)
+        REFERENCES cliente(id)
 );
 
 
@@ -288,7 +318,7 @@ CREATE TABLE item_compra (
 
 
 -- ============================================================
--- 15. TABELA: VENDA
+-- 15. TABELA: VENDA (FK do cliente agora aponta para cliente(id))
 -- ============================================================
 
 CREATE TABLE venda (
@@ -313,7 +343,7 @@ CREATE TABLE venda (
 
     CONSTRAINT fk_venda_cliente
         FOREIGN KEY (id_cliente)
-        REFERENCES cliente(id_cliente),
+        REFERENCES cliente(id),
 
     CONSTRAINT fk_venda_usuario
         FOREIGN KEY (id_usuario)
@@ -1024,7 +1054,7 @@ GROUP BY
 
 
 -- ============================================================
--- 30. VIEW DE VENDAS
+-- 30. VIEW DE VENDAS (ALTERADA: junção com cliente.id)
 -- ============================================================
 
 CREATE OR REPLACE VIEW vw_vendas AS
@@ -1050,7 +1080,7 @@ SELECT
 FROM venda v
 
 LEFT JOIN cliente c
-    ON c.id_cliente = v.id_cliente
+    ON c.id = v.id_cliente
 
 LEFT JOIN item_venda iv
     ON iv.id_venda = v.id_venda
@@ -1308,13 +1338,12 @@ VALUES
 
 
 -- ============================================================
--- 36. DADOS INICIAIS - CLIENTES
+-- 36. DADOS INICIAIS - CLIENTES (ALTERADO)
 -- ============================================================
 
 INSERT INTO cliente (
     tipo_pessoa,
     nome,
-    cpf_cnpj,
     telefone,
     email,
     endereco,
@@ -1326,7 +1355,6 @@ VALUES
 (
     'PF',
     'João da Silva',
-    '123.456.789-00',
     '(49) 99999-3333',
     'joao@email.com',
     'Rua A, 10',
@@ -1337,7 +1365,6 @@ VALUES
 (
     'PF',
     'Maria Oliveira',
-    '987.654.321-00',
     '(49) 99999-4444',
     'maria@email.com',
     'Rua B, 20',
@@ -1348,12 +1375,60 @@ VALUES
 (
     'PJ',
     'Construtora Exemplo LTDA',
-    '11.222.333/0001-44',
     '(49) 99999-5555',
     'contato@construtora.com',
     'Rua C, 30',
     'São Miguel do Oeste',
     'SC'
+);
+
+
+-- ============================================================
+-- 36.1. DADOS INICIAIS - PESSOA FISICA (NOVO)
+-- ============================================================
+
+INSERT INTO pessoa_fisica (
+    cpf,
+    cliente_id
+)
+
+VALUES
+(
+    '12345678900',
+    (
+        SELECT id
+        FROM cliente
+        WHERE nome = 'João da Silva'
+    )
+),
+
+(
+    '98765432100',
+    (
+        SELECT id
+        FROM cliente
+        WHERE nome = 'Maria Oliveira'
+    )
+);
+
+
+-- ============================================================
+-- 36.2. DADOS INICIAIS - PESSOA JURIDICA (NOVO)
+-- ============================================================
+
+INSERT INTO pessoa_juridica (
+    cnpj,
+    cliente_id
+)
+
+VALUES
+(
+    '11222333000144',
+    (
+        SELECT id
+        FROM cliente
+        WHERE nome = 'Construtora Exemplo LTDA'
+    )
 );
 
 
