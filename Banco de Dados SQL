@@ -1721,6 +1721,616 @@ JOIN permissao pe
 WHERE p.nome = 'VENDEDOR';
 
 
+
+
+
+-- ------------------------------------------------------------
+-- finalizar venda
+-- ------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE sp_finalizar_venda(p_id_venda BIGINT)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_status    VARCHAR(20);
+    v_desconto  NUMERIC(12,2);
+    v_qtd_itens INTEGER;
+    v_subtotal  NUMERIC(12,2);
+    v_total     NUMERIC(12,2);
+    v_pago      NUMERIC(12,2);
+BEGIN
+    SELECT status, desconto
+      INTO v_status, v_desconto
+      FROM venda
+     WHERE id_venda = p_id_venda
+       FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Venda % não encontrada.', p_id_venda;
+    END IF;
+
+    IF v_status <> 'ABERTA' THEN
+        RAISE EXCEPTION 'Venda % não está ABERTA (status atual: %).', p_id_venda, v_status;
+    END IF;
+
+    SELECT COUNT(*),
+           COALESCE(SUM(quantidade * valor_unitario - desconto), 0)
+      INTO v_qtd_itens, v_subtotal
+      FROM item_venda
+     WHERE id_venda = p_id_venda;
+
+    IF v_qtd_itens = 0 THEN
+        RAISE EXCEPTION 'Venda % não possui itens.', p_id_venda;
+    END IF;
+
+    IF v_desconto > v_subtotal THEN
+        RAISE EXCEPTION 'Desconto da venda (%) maior que o subtotal (%).', v_desconto, v_subtotal;
+    END IF;
+
+    v_total := v_subtotal - v_desconto;
+
+    SELECT COALESCE(SUM(valor), 0)
+      INTO v_pago
+      FROM pagamento
+     WHERE id_venda = p_id_venda;
+
+    IF v_pago < v_total THEN
+        RAISE EXCEPTION 'Pagamentos insuficientes na venda %: total %, pago %.',
+            p_id_venda, v_total, v_pago;
+    END IF;
+
+    UPDATE venda SET status = 'FINALIZADA' WHERE id_venda = p_id_venda;
+END;
+$$;
+
+
+-- ------------------------------------------------------------
+-- registrar e ajuste estoque
+-- ------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE sp_registrar_ajuste_estoque(
+    p_id_produto BIGINT,
+    p_id_usuario BIGINT,
+    p_tipo       VARCHAR,
+    p_quantidade NUMERIC,
+    p_motivo     VARCHAR
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_saldo NUMERIC(12,3);
+BEGIN
+    IF p_quantidade IS NULL OR p_quantidade <= 0 THEN
+        RAISE EXCEPTION 'A quantidade deve ser maior que zero.';
+    END IF;
+
+    IF p_tipo NOT IN ('AJUSTE_ENTRADA', 'AJUSTE_SAIDA', 'SAIDA_PERDA', 'SAIDA_AVARIA') THEN
+        RAISE EXCEPTION 'Tipo de ajuste inválido: %.', p_tipo;
+    END IF;
+
+    IF p_motivo IS NULL OR length(trim(p_motivo)) = 0 THEN
+        RAISE EXCEPTION 'Informe o motivo do ajuste.';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM produto WHERE id_produto = p_id_produto AND ativo) THEN
+        RAISE EXCEPTION 'Produto % inexistente ou inativo.', p_id_produto;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM usuario WHERE id_usuario = p_id_usuario AND ativo) THEN
+        RAISE EXCEPTION 'Usuário % inexistente ou inativo.', p_id_usuario;
+    END IF;
+
+    INSERT INTO estoque (id_produto, quantidade_atual)
+    VALUES (p_id_produto, 0)
+    ON CONFLICT (id_produto) DO NOTHING;
+
+    SELECT quantidade_atual INTO v_saldo
+      FROM estoque
+     WHERE id_produto = p_id_produto
+       FOR UPDATE;
+
+    IF p_tipo = 'AJUSTE_ENTRADA' THEN
+        UPDATE estoque
+           SET quantidade_atual = quantidade_atual + p_quantidade
+         WHERE id_produto = p_id_produto;
+    ELSE
+        IF v_saldo < p_quantidade THEN
+            RAISE EXCEPTION 'Estoque insuficiente. Estoque atual: %, solicitado: %.', v_saldo, p_quantidade;
+        END IF;
+
+        UPDATE estoque
+           SET quantidade_atual = quantidade_atual - p_quantidade
+         WHERE id_produto = p_id_produto;
+    END IF;
+
+    INSERT INTO movimentacao_estoque (id_produto, id_usuario, tipo, quantidade, motivo)
+    VALUES (p_id_produto, p_id_usuario, p_tipo, p_quantidade, p_motivo);
+END;
+$$;
+
+
+-- ------------------------------------------------------------
+-- receber compra
+-- ------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE sp_receber_compra(p_id_compra BIGINT)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_status VARCHAR(20);
+BEGIN
+    SELECT status INTO v_status
+      FROM compra
+     WHERE id_compra = p_id_compra
+       FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Compra % não encontrada.', p_id_compra;
+    END IF;
+
+    IF v_status <> 'ABERTA' THEN
+        RAISE EXCEPTION 'Compra % não está ABERTA (status atual: %).', p_id_compra, v_status;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM item_compra WHERE id_compra = p_id_compra) THEN
+        RAISE EXCEPTION 'Compra % não possui itens.', p_id_compra;
+    END IF;
+
+    UPDATE compra SET status = 'RECEBIDA' WHERE id_compra = p_id_compra;
+END;
+$$;
+
+
+-- ------------------------------------------------------------
+-- cancelar venda
+-- ------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE sp_cancelar_venda(p_id_venda BIGINT)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_status     VARCHAR(20);
+    v_id_usuario BIGINT;
+    v_item       RECORD;
+BEGIN
+    SELECT status, id_usuario
+      INTO v_status, v_id_usuario
+      FROM venda
+     WHERE id_venda = p_id_venda
+       FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Venda % não encontrada.', p_id_venda;
+    END IF;
+
+    IF v_status = 'CANCELADA' THEN
+        RAISE EXCEPTION 'Venda % já está cancelada.', p_id_venda;
+    END IF;
+
+    IF v_status = 'FINALIZADA' THEN
+        FOR v_item IN
+            SELECT iv.id_produto, iv.quantidade
+              FROM item_venda iv
+              JOIN movimentacao_estoque m
+                ON m.id_item_venda = iv.id_item_venda
+               AND m.tipo = 'SAIDA_VENDA'
+             WHERE iv.id_venda = p_id_venda
+        LOOP
+            UPDATE estoque
+               SET quantidade_atual = quantidade_atual + v_item.quantidade
+             WHERE id_produto = v_item.id_produto;
+
+            INSERT INTO movimentacao_estoque (id_produto, id_usuario, tipo, quantidade, motivo)
+            VALUES (v_item.id_produto, v_id_usuario, 'AJUSTE_ENTRADA', v_item.quantidade,
+                    'Estorno do cancelamento da venda ' || p_id_venda);
+        END LOOP;
+    END IF;
+
+    UPDATE venda SET status = 'CANCELADA' WHERE id_venda = p_id_venda;
+END;
+$$;
+
+
+-- ------------------------------------------------------------
+-- cadastrar cliente
+-- ------------------------------------------------------------
+CREATE OR REPLACE PROCEDURE sp_cadastrar_cliente(
+    p_tipo_pessoa VARCHAR,
+    p_nome        VARCHAR,
+    p_documento   VARCHAR,
+    p_telefone    VARCHAR,
+    p_email       VARCHAR,
+    p_endereco    VARCHAR,
+    p_cidade      VARCHAR,
+    p_estado      CHAR,
+    INOUT p_id_cliente BIGINT DEFAULT NULL
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    v_doc VARCHAR;
+BEGIN
+    IF p_tipo_pessoa NOT IN ('PF', 'PJ') THEN
+        RAISE EXCEPTION 'Tipo de pessoa inválido: % (use PF ou PJ).', p_tipo_pessoa;
+    END IF;
+
+    v_doc := regexp_replace(COALESCE(p_documento, ''), '[^0-9]', '', 'g');
+
+    IF p_tipo_pessoa = 'PF' AND length(v_doc) <> 11 THEN
+        RAISE EXCEPTION 'CPF deve ter 11 dígitos.';
+    ELSIF p_tipo_pessoa = 'PJ' AND length(v_doc) <> 14 THEN
+        RAISE EXCEPTION 'CNPJ deve ter 14 dígitos.';
+    END IF;
+
+    INSERT INTO cliente (tipo_pessoa, nome, telefone, email, endereco, cidade, estado)
+    VALUES (p_tipo_pessoa, p_nome, p_telefone, p_email, p_endereco, p_cidade, upper(p_estado))
+    RETURNING id INTO p_id_cliente;
+
+    IF p_tipo_pessoa = 'PF' THEN
+        INSERT INTO pessoa_fisica (cpf, cliente_id) VALUES (v_doc, p_id_cliente);
+    ELSE
+        INSERT INTO pessoa_juridica (cnpj, cliente_id) VALUES (v_doc, p_id_cliente);
+    END IF;
+END;
+$$;
+
+-- ============================================================
+-- VIEWS ADICIONAIS PARA RELATÓRIOS
+-- ============================================================
+
+CREATE OR REPLACE VIEW vw_venda_itens AS
+SELECT
+    v.id_venda,
+    v.data_venda,
+    v.status,
+    p.codigo,
+    p.nome                                   AS produto,
+    um.sigla                                 AS unidade,
+    iv.quantidade,
+    iv.valor_unitario,
+    iv.desconto,
+    (iv.quantidade * iv.valor_unitario) - iv.desconto AS subtotal
+FROM item_venda iv
+JOIN venda v           ON v.id_venda = iv.id_venda
+JOIN produto p         ON p.id_produto = iv.id_produto
+JOIN unidade_medida um ON um.id_unidade = p.id_unidade;
+
+CREATE OR REPLACE VIEW vw_pagamentos_por_venda AS
+SELECT
+    vv.id_venda,
+    vv.data_venda,
+    vv.status,
+    vv.cliente,
+    vv.total_venda,
+    COALESCE(pg.total_pago, 0)                  AS total_pago,
+    vv.total_venda - COALESCE(pg.total_pago, 0) AS saldo_aberto
+FROM vw_vendas vv
+LEFT JOIN (
+    SELECT id_venda, SUM(valor) AS total_pago
+    FROM pagamento
+    GROUP BY id_venda
+) pg ON pg.id_venda = vv.id_venda;
+
+CREATE OR REPLACE VIEW vw_clientes_completo AS
+SELECT
+    c.id,
+    c.tipo_pessoa,
+    c.nome,
+    COALESCE(pf.cpf, pj.cnpj) AS documento,
+    c.telefone,
+    c.email,
+    c.endereco,
+    c.cidade,
+    c.estado,
+    c.ativo
+FROM cliente c
+LEFT JOIN pessoa_fisica   pf ON pf.cliente_id = c.id
+LEFT JOIN pessoa_juridica pj ON pj.cliente_id = c.id;
+
+CREATE OR REPLACE VIEW vw_estoque_baixo AS
+SELECT *
+FROM vw_estoque
+WHERE situacao = 'ESTOQUE BAIXO';
+
+CREATE OR REPLACE VIEW vw_movimentacao_detalhada AS
+SELECT
+    m.id_movimentacao,
+    m.data_movimentacao,
+    p.codigo,
+    p.nome          AS produto,
+    m.tipo,
+    m.quantidade,
+    f.nome          AS responsavel,
+    m.motivo
+FROM movimentacao_estoque m
+JOIN produto p     ON p.id_produto = m.id_produto
+JOIN usuario u     ON u.id_usuario = m.id_usuario
+JOIN funcionario f ON f.id_funcionario = u.id_funcionario;
+
+CREATE OR REPLACE VIEW vw_vendas_por_vendedor AS
+SELECT
+    f.nome                                   AS vendedor,
+    u.login,
+    date_trunc('month', v.data_venda)::DATE  AS mes,
+    COUNT(*)                                 AS qtd_vendas,
+    SUM(vv.total_venda)                      AS total_vendido,
+    ROUND(AVG(vv.total_venda), 2)            AS ticket_medio
+FROM venda v
+JOIN usuario u     ON u.id_usuario = v.id_usuario
+JOIN funcionario f ON f.id_funcionario = u.id_funcionario
+JOIN vw_vendas vv  ON vv.id_venda = v.id_venda
+WHERE v.status = 'FINALIZADA'
+GROUP BY f.nome, u.login, date_trunc('month', v.data_venda);
+
+CREATE OR REPLACE VIEW vw_produtos_mais_vendidos AS
+SELECT
+    p.id_produto,
+    p.codigo,
+    p.nome                     AS produto,
+    c.nome                     AS categoria,
+    um.sigla                   AS unidade,
+    SUM(iv.quantidade)         AS qtd_vendida,
+    SUM((iv.quantidade * iv.valor_unitario) - iv.desconto) AS receita
+FROM item_venda iv
+JOIN venda v           ON v.id_venda = iv.id_venda AND v.status = 'FINALIZADA'
+JOIN produto p         ON p.id_produto = iv.id_produto
+JOIN categoria c       ON c.id_categoria = p.id_categoria
+JOIN unidade_medida um ON um.id_unidade = p.id_unidade
+GROUP BY p.id_produto, p.codigo, p.nome, c.nome, um.sigla;
+
+CREATE OR REPLACE VIEW vw_faturamento_forma_pagamento AS
+SELECT
+    pg.forma_pagamento,
+    date_trunc('month', pg.data_pagamento)::DATE AS mes,
+    COUNT(*)        AS qtd_pagamentos,
+    SUM(pg.valor)   AS total_recebido
+FROM pagamento pg
+JOIN venda v ON v.id_venda = pg.id_venda AND v.status = 'FINALIZADA'
+GROUP BY pg.forma_pagamento, date_trunc('month', pg.data_pagamento);
+
+CREATE OR REPLACE VIEW vw_compras_por_fornecedor AS
+SELECT
+    fornecedor,
+    cnpj,
+    COUNT(*)           AS qtd_compras,
+    SUM(total_compra)  AS total_comprado,
+    MAX(data_compra)   AS ultima_compra
+FROM vw_compras
+WHERE status <> 'CANCELADA'
+GROUP BY fornecedor, cnpj;
+
+
+-- ------------------------------------------------------------
+-- 1. Grupos e login
+-- ------------------------------------------------------------
+CREATE ROLE grp_admin     NOLOGIN;
+CREATE ROLE grp_gerente   NOLOGIN;
+CREATE ROLE grp_vendedor  NOLOGIN;
+CREATE ROLE grp_estoque   NOLOGIN;
+CREATE ROLE grp_atendente NOLOGIN;
+CREATE ROLE grp_backup    NOLOGIN;
+
+-- ------------------------------------------------------------
+-- 2. Usuários com os login)
+-- ------------------------------------------------------------
+CREATE ROLE usr_admin     LOGIN PASSWORD 'pepinos'    IN ROLE grp_admin;
+CREATE ROLE usr_gerente   LOGIN PASSWORD 'pepinos'  IN ROLE grp_gerente;
+CREATE ROLE usr_vendedor  LOGIN PASSWORD 'pepinos' IN ROLE grp_vendedor;
+CREATE ROLE usr_estoque   LOGIN PASSWORD 'pepinos'  IN ROLE grp_estoque;
+CREATE ROLE usr_atendente LOGIN PASSWORD 'pepinos'    IN ROLE grp_atendente;
+CREATE ROLE usr_backup    LOGIN PASSWORD 'pepinos'   IN ROLE grp_backup;
+
+-- backup lê tudo (somente leitura), sem ser superusuário
+GRANT pg_read_all_data TO grp_backup;
+
+-- ------------------------------------------------------------
+-- 3. CONEXÃO E SCHEMA
+-- ------------------------------------------------------------
+GRANT CONNECT ON DATABASE ebrick
+    TO grp_admin, grp_gerente, grp_vendedor, grp_estoque, grp_atendente, grp_backup;
+
+GRANT USAGE ON SCHEMA public
+    TO grp_admin, grp_gerente, grp_vendedor, grp_estoque, grp_atendente, grp_backup;
+
+-- ------------------------------------------------------------
+-- 4. PRIVILÉGIOS EM TABELAS E VIEWS
+-- ------------------------------------------------------------
+
+-- 4.1 ADMIN: tudo
+GRANT ALL ON ALL TABLES    IN SCHEMA public TO grp_admin;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO grp_admin;
+
+-- 4.2 GERENTE: lê tudo (menos credenciais); escreve no operacional; DELETE só em itens
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO grp_gerente;
+REVOKE ALL ON usuario FROM grp_gerente;          -- senha_hash nunca exposto
+GRANT INSERT, UPDATE ON
+    categoria, unidade_medida, produto, fornecedor,
+    cliente, pessoa_fisica, pessoa_juridica,
+    compra, item_compra, venda, item_venda, pagamento
+TO grp_gerente;
+GRANT DELETE ON item_compra, item_venda TO grp_gerente;
+
+-- 4.3 VENDEDOR (sem acesso a compras, fornecedores e usuários)
+GRANT SELECT ON
+    categoria, unidade_medida, produto, estoque,
+    cliente, pessoa_fisica, pessoa_juridica,
+    venda, item_venda, pagamento,
+    vw_estoque, vw_vendas, vw_venda_itens,
+    vw_pagamentos_por_venda, vw_clientes_completo
+TO grp_vendedor;
+GRANT INSERT, UPDATE ON
+    cliente, pessoa_fisica, pessoa_juridica,
+    venda, item_venda, pagamento
+TO grp_vendedor;
+GRANT DELETE ON item_venda TO grp_vendedor;
+
+-- 4.4 ESTOQUE (controle de estoque e compras)
+GRANT SELECT ON
+    categoria, unidade_medida, produto, fornecedor,
+    estoque, movimentacao_estoque, compra, item_compra,
+    vw_estoque, vw_estoque_baixo, vw_compras,
+    vw_compras_por_fornecedor, vw_movimentacao_detalhada
+TO grp_estoque;
+GRANT INSERT, UPDATE ON fornecedor, compra, item_compra TO grp_estoque;
+GRANT DELETE ON item_compra TO grp_estoque;
+
+-- 4.5 ATENDENTE (cadastro e consulta de clientes)
+GRANT SELECT ON
+    cliente, pessoa_fisica, pessoa_juridica, vw_clientes_completo,
+    categoria, unidade_medida, produto, vw_estoque
+TO grp_atendente;
+GRANT INSERT, UPDATE ON cliente, pessoa_fisica, pessoa_juridica TO grp_atendente;
+
+
+-- ------------------------------------------------------------
+REVOKE EXECUTE ON PROCEDURE sp_finalizar_venda(BIGINT)  FROM PUBLIC;
+REVOKE EXECUTE ON PROCEDURE sp_cancelar_venda(BIGINT)   FROM PUBLIC;
+REVOKE EXECUTE ON PROCEDURE sp_receber_compra(BIGINT)   FROM PUBLIC;
+REVOKE EXECUTE ON PROCEDURE sp_registrar_ajuste_estoque(BIGINT, BIGINT, VARCHAR, NUMERIC, VARCHAR) FROM PUBLIC;
+REVOKE EXECUTE ON PROCEDURE sp_cadastrar_cliente(VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, CHAR, BIGINT) FROM PUBLIC;
+
+GRANT EXECUTE ON PROCEDURE sp_finalizar_venda(BIGINT)  TO grp_admin, grp_gerente, grp_vendedor;
+GRANT EXECUTE ON PROCEDURE sp_cancelar_venda(BIGINT)   TO grp_admin, grp_gerente;
+GRANT EXECUTE ON PROCEDURE sp_receber_compra(BIGINT)   TO grp_admin, grp_gerente, grp_estoque;
+GRANT EXECUTE ON PROCEDURE sp_registrar_ajuste_estoque(BIGINT, BIGINT, VARCHAR, NUMERIC, VARCHAR)
+    TO grp_admin, grp_gerente, grp_estoque;
+GRANT EXECUTE ON PROCEDURE sp_cadastrar_cliente(VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, CHAR, BIGINT)
+    TO grp_admin, grp_gerente, grp_vendedor, grp_atendente;
+
+
 -- ============================================================
 -- FIM
 -- ============================================================
+
+-- ============================================================
+-- 12. SELECTS DOS RELATÓRIOS
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- R01. Vendas por período (view vw_vendas)
+-- ------------------------------------------------------------
+SELECT id_venda, data_venda, status, cliente, total_venda
+FROM vw_vendas
+WHERE data_venda >= CURRENT_DATE - INTERVAL '30 days'
+  AND status = 'FINALIZADA'
+ORDER BY data_venda DESC;
+
+-- ------------------------------------------------------------
+-- R02. Itens de uma venda (nota/comprovante)  -> parâmetro: id_venda
+-- ------------------------------------------------------------
+SELECT id_venda, codigo, produto, unidade, quantidade,
+       valor_unitario, desconto, subtotal
+FROM vw_venda_itens
+WHERE id_venda = 1
+ORDER BY produto;
+
+-- ------------------------------------------------------------
+-- R03. Desempenho por vendedor e mês
+-- ------------------------------------------------------------
+SELECT vendedor, mes, qtd_vendas, total_vendido, ticket_medio
+FROM vw_vendas_por_vendedor
+ORDER BY mes DESC, total_vendido DESC;
+
+-- ------------------------------------------------------------
+-- R04. Top 10 produtos mais vendidos
+-- ------------------------------------------------------------
+SELECT codigo, produto, categoria, unidade, qtd_vendida, receita
+FROM vw_produtos_mais_vendidos
+ORDER BY qtd_vendida DESC
+LIMIT 10;
+
+-- ------------------------------------------------------------
+-- R05. Faturamento por forma de pagamento
+-- ------------------------------------------------------------
+SELECT forma_pagamento, mes, qtd_pagamentos, total_recebido
+FROM vw_faturamento_forma_pagamento
+ORDER BY mes DESC, total_recebido DESC;
+
+-- ------------------------------------------------------------
+-- R06. Produtos com estoque baixo (reposição)
+-- ------------------------------------------------------------
+SELECT codigo, nome, categoria, unidade,
+       quantidade_atual, estoque_minimo,
+       (estoque_minimo - quantidade_atual) AS faltante
+FROM vw_estoque_baixo
+ORDER BY faltante DESC;
+
+-- ------------------------------------------------------------
+-- R07. Valor do estoque por categoria (a preço de venda)
+-- ------------------------------------------------------------
+SELECT categoria,
+       COUNT(*)                          AS qtd_produtos,
+       SUM(quantidade_atual)             AS itens_em_estoque,
+       SUM(quantidade_atual * preco_venda) AS valor_estoque
+FROM vw_estoque
+GROUP BY categoria
+ORDER BY valor_estoque DESC;
+
+-- ------------------------------------------------------------
+-- R08. Compras por fornecedor
+-- ------------------------------------------------------------
+SELECT fornecedor, cnpj, qtd_compras, total_comprado, ultima_compra
+FROM vw_compras_por_fornecedor
+ORDER BY total_comprado DESC;
+
+-- ------------------------------------------------------------
+-- R09. Histórico de movimentação de um produto  -> parâmetro: código
+-- ------------------------------------------------------------
+SELECT data_movimentacao, tipo, quantidade, responsavel, motivo
+FROM vw_movimentacao_detalhada
+WHERE codigo = 'CIM001'
+ORDER BY data_movimentacao DESC;
+
+-- ------------------------------------------------------------
+-- R10. Vendas com saldo em aberto (contas a receber)
+-- ------------------------------------------------------------
+SELECT id_venda, data_venda, cliente, total_venda, total_pago, saldo_aberto
+FROM vw_pagamentos_por_venda
+WHERE status <> 'CANCELADA'
+  AND saldo_aberto > 0
+ORDER BY data_venda;
+
+-- ------------------------------------------------------------
+-- R11. Ficha de clientes com CPF/CNPJ
+-- ------------------------------------------------------------
+SELECT id, tipo_pessoa, nome, documento, telefone, email, cidade, estado
+FROM vw_clientes_completo
+WHERE ativo
+ORDER BY nome;
+
+-- ------------------------------------------------------------
+-- R12. Ranking de clientes por valor comprado (JOIN cliente x vendas)
+-- ------------------------------------------------------------
+SELECT cc.nome, cc.documento,
+       COUNT(vv.id_venda)  AS qtd_compras,
+       SUM(vv.total_venda) AS total_gasto
+FROM vw_clientes_completo cc
+JOIN venda v      ON v.id_cliente = cc.id
+JOIN vw_vendas vv ON vv.id_venda = v.id_venda
+WHERE v.status = 'FINALIZADA'
+GROUP BY cc.nome, cc.documento
+ORDER BY total_gasto DESC;
+
+-- ------------------------------------------------------------
+-- R13. Produtos sem venda nos últimos 90 dias
+-- ------------------------------------------------------------
+SELECT p.codigo, p.nome, c.nome AS categoria, e.quantidade_atual
+FROM produto p
+JOIN categoria c   ON c.id_categoria = p.id_categoria
+LEFT JOIN estoque e ON e.id_produto = p.id_produto
+WHERE p.ativo
+  AND NOT EXISTS (
+        SELECT 1
+        FROM item_venda iv
+        JOIN venda v ON v.id_venda = iv.id_venda
+        WHERE iv.id_produto = p.id_produto
+          AND v.status = 'FINALIZADA'
+          AND v.data_venda >= CURRENT_DATE - INTERVAL '90 days'
+  )
+ORDER BY p.nome;
