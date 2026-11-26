@@ -62,14 +62,6 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 | Git / GitHub | Versionamento e entrega do projeto |
 
 ---
-categoria
-
-Categorias de produtos da loja (cimentos, tintas, ferramentas etc.).
-
-Coluna	Tipo	Nulo	Restrições	Descrição
-id_categoria	BIGINT	NÃO	PK, IDENTITY	Identificador da categoria.
-nome	VARCHAR(100)	NÃO	UNIQUE	Nome da categoria.
-descricao	VARCHAR(255)	SIM	-	Descrição da categoria.
 
 ## Estrutura do repositorio
 
