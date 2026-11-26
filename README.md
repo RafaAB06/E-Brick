@@ -62,7 +62,7 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 | Git / GitHub | Versionamento e entrega do projeto |
 
 ---
-## Dicionário de dados
+Dicionário de dados
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ## Estrutura do repositorio
 
